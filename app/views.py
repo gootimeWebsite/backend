@@ -41,11 +41,10 @@ def login():
                     username = "Tel" + str(random.randint(10000000, 99999999))
                     while usermanager.search(username, "username") is not None:
                         username = "Tel" + str(random.randint(10000000, 99999999))
-                    login = usermanager.insert(username, data['phonenumber'], "", "")
-                    if login == "success":
+                    user = usermanager.insert(username, data['phonenumber'], "", "")
+                    if user is not None:
                         status = 1
                     else:
-                        print (login, username)
                         status = 2
                 else:
                     username = user.username
@@ -63,10 +62,23 @@ def login():
     if status == 0 or status == 1:
         ret['username'] = username
         ret['token'] = user.generate_auth_token().decode('ascii')
+        ret['rftoken'] = user.generate_auth_token(app.config['LONG_LIFE_TIME']).decode('ascii')
 
     response = make_response(json.dumps(ret))
     response.headers['Content-Type'] = 'application/json;charset=utf8'
     response.status_code = login_status[status]
+    return response
+
+
+@app.route('/token', methods = ['GET'])
+@auth.login_required
+def token():
+    ret = {}
+    ret['token'] = g.user.generate_auth_token().decode('ascii')
+
+    response = make_response(json.dumps(ret))
+    response.headers['Content-Type'] = 'application/json;charset=utf8'
+    response.status_code = 200
     return response
 
 

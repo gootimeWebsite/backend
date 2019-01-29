@@ -1,5 +1,6 @@
 from app import db, app
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer, SignatureExpired, BadSignature
+import random
 
 
 class User(db.Model):
@@ -13,13 +14,18 @@ class User(db.Model):
     weixin = db.Column(db.String(30), unique=True, nullable=True)
     qq = db.Column(db.String(12), unique=True, nullable=True)
     rulesID = db.Column(db.Integer, db.ForeignKey('rules.id', ondelete="CASCADE", onupdate="CASCADE"), nullable=False, default=1)
+    rand = db.Column(db.Integer, nullable=False, default=1)
 
     def __repr__(self):
         return '<Username %r>' % self.username
 
-    def generate_auth_token(self, lifetime=7200):
+    def generate_auth_token(self, lifetime=app.config['LIFE_TIME']):
         s = Serializer(app.config['SECRET_KEY'], expires_in = lifetime)
-        return s.dumps({'username':self.username})
+        if lifetime == app.config['LIFE_TIME']:
+            self.rand = random.randint(1, 9999)
+            db.session.add(self)
+            db.session.commit()
+        return s.dumps({'username':self.username, 'lifetime':lifetime, 'rand':self.rand})
 
     @staticmethod
     def verify_auth_token(token):
@@ -31,6 +37,8 @@ class User(db.Model):
         except BadSignature:
             return None
         user = User.query.get(data['username'])
+        if data['lifetime'] == app.config['LIFE_TIME'] and user.rand != data['rand']:
+            return None
         return user
 
 

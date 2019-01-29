@@ -25,9 +25,9 @@ class UserManager:
             user = User(username=username, phonenumber=phonenumber, weixin=weixin, qq=qq)
             db.session.add(user)
             db.session.commit()
-            return "success"
+            return user
         except:
-            return "error"
+            return None
 
 
     def update(self, user, username, phonenumber, weixin, qq):

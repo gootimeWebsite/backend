@@ -1,7 +1,15 @@
 # -*- coding: UTF-8 -*-
 from flask import *
-from . import user
+from flask_restful import Resource
+from . import user, api
+from app import auth
 
-@user.route('/', methods = ['GET', 'POST'])
-def user_info():
-    pass
+@api.resource('/')
+class UserInfo(Resource):
+    decorators = [auth.login_required]
+    
+    def get(self):
+        return "GET UserInfo!"
+
+    def put(self):
+        return "PUT UserInfo!"

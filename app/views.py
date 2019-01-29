@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 from flask import *
-from app import app
+from app import app, auth
 from .models import *
 from .user.manager import usermanager
 from .access import accessmanager
@@ -8,8 +8,17 @@ from .textMessage import TextMessage
 import random, json
 
 
-login_status = [200, 403, 500, 403, 403, 400]
-login_message = ["登陆成功", "用户不存在", "未知错误", "缺少短信验证码", "短信验证码错误", "无效请求"]
+@auth.verify_token
+def verify_token(token):
+    user = User.verify_auth_token(token)
+    if not user:
+        return False
+    g.user = user
+    return True
+
+
+login_status = [200, 201, 500, 403, 403, 400]
+login_message = ["登陆成功", "登陆成功", "未知错误", "缺少短信验证码", "短信验证码错误", "无效请求"]
 @app.route('/login', methods = ['POST'])
 def login():
     ret = {}
@@ -34,7 +43,7 @@ def login():
                         username = "Tel" + str(random.randint(10000000, 99999999))
                     login = usermanager.insert(username, data['phonenumber'], "", "")
                     if login == "success":
-                        status = 0
+                        status = 1
                     else:
                         print (login, username)
                         status = 2
@@ -51,8 +60,9 @@ def login():
             status = 2
     ret['message'] = login_message[status]
 
-    if status == 0:
-        session['username'] = username
+    if status == 0 or status == 1:
+        ret['username'] = username
+        ret['token'] = user.generate_auth_token().decode('ascii')
 
     response = make_response(json.dumps(ret))
     response.headers['Content-Type'] = 'application/json;charset=utf8'
@@ -60,24 +70,18 @@ def login():
     return response
 
 
-logout_status = [200, 403, 403, 400]
-logout_message = ["登出成功", "错误用户", "用户未登录", "无效请求"]
+logout_status = [200, 400]
+logout_message = ["登出成功", "无效请求"]
 @app.route('/logout', methods = ['POST'])
+@auth.login_required
 def logout():
     ret = {}
     data = json.loads(request.get_data())
 
     if accessmanager.auth(1, "POST", "/logout") is False:
-        status = 3
+        status = 1
     else:
-        if session.get('username') is not None:
-            if session.get('username') == data['username']:
-                session.pop('username')
-                status = 0
-            else:
-                status = 1
-        else:
-            status = 2
+        status = 0
     ret['message'] = logout_message[status]
 
     if status == 0:

@@ -1,5 +1,5 @@
-from app import db
-
+from app import db, app
+from itsdangerous import TimedJSONWebSignatureSerializer as Serializer, SignatureExpired, BadSignature
 
 
 class User(db.Model):
@@ -16,6 +16,22 @@ class User(db.Model):
 
     def __repr__(self):
         return '<Username %r>' % self.username
+
+    def generate_auth_token(self, lifetime=7200):
+        s = Serializer(app.config['SECRET_KEY'], expires_in = lifetime)
+        return s.dumps({'username':self.username})
+
+    @staticmethod
+    def verify_auth_token(token):
+        s = Serializer(app.config['SECRET_KEY'])
+        try:
+            data = s.loads(token)
+        except SignatureExpired:
+            return None
+        except BadSignature:
+            return None
+        user = User.query.get(data['username'])
+        return user
 
 
 class Rules(db.Model):

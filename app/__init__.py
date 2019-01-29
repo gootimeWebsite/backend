@@ -9,4 +9,4 @@ db = SQLAlchemy(app, use_native_unicode="utf8")
 from .user import user as user_blueprint
 app.register_blueprint(user_blueprint, url_prefix='/user')
 
-from app import views, models
+from app import views, models, access

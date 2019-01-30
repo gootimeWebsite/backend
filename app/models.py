@@ -28,7 +28,7 @@ class User(db.Model):
         return s.dumps({'username':self.username, 'lifetime':lifetime, 'rand':self.rand})
 
     @staticmethod
-    def verify_auth_token(token):
+    def verify_auth_token(token, refresh=False):
         s = Serializer(app.config['SECRET_KEY'])
         try:
             data = s.loads(token)
@@ -37,7 +37,7 @@ class User(db.Model):
         except BadSignature:
             return None
         user = User.query.get(data['username'])
-        if data['lifetime'] == app.config['LIFE_TIME'] and user.rand != data['rand']:
+        if not refresh and user.rand != data['rand']:
             return None
         return user
 

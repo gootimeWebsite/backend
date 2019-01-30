@@ -10,15 +10,61 @@ import random, json
 
 @auth.verify_token
 def verify_token(token):
-    user = User.verify_auth_token(token)
+    if request.path == "/token":
+        user = User.verify_auth_token(token, True)
+    else:
+        user = User.verify_auth_token(token)
     if not user:
         return False
     g.user = user
     return True
 
 
+    """
+    @api {post} /login User Login
+    @apiVersion 0.1.0
+    @apiName Login
+    @apiGroup General
+    @apiPermission rank(0)
+    @apiDescription API for user to login.
+
+    @apiParam {String} type The way user login: 'phone', 'weixin', 'qq'.
+
+    @apiParam {String} phonenumber User's phnoe number when 'type' == 'phone'.
+    @apiParam {String} message User's text message when 'type' == 'phone'.
+
+    @apiSuccess {String} message User's login status: 'success'.
+    @apiSuccess {String} username User's username.
+    @apiSuccess {String} token User's access token.
+    @apiSuccess {String} rftoken User's refresh token to get access token.
+    @apiSuccess {Number} expires Access token's expires time(s).
+
+    @apiSuccessExample {json} Success-Response:
+        HTTP/1.1 200 OK
+        {
+            "message": "success",
+            "username": "Tel11893460",
+            "token": "eyJhbGciOiJIUzI1NiIsImlhdCI6MTU0ODc3NDMzNiwiZXhwIjoxNTQ4NzgxNTM2fQ.eyJ1c2VybmFtZSI6IlRlbDExODkzNDYwIiwibGlmZXRpbWUiOjcyMDAsInJhbmQiOjU5OTR9.Iw6cZ_qnDMpxthxYuHKAldOzzk5QuairvzsnzZmDIIU",
+            "rftoken": "eyJhbGciOiJIUzI1NiIsImlhdCI6MTU0ODc3NDMzNiwiZXhwIjoxNTUxMzY2MzM2fQ.eyJ1c2VybmFtZSI6IlRlbDExODkzNDYwIiwibGlmZXRpbWUiOjI1OTIwMDAsInJhbmQiOjU5OTR9.81CvEk63uxCTIEhgvfYf52fpU3keeFu5zKDNhvw__H8",
+            "expires": 7200
+        }
+
+    @apiError NeedMessage Need text message to login when 'type' == 'phone'.
+    @apiError WrongMessage Wrong text message when 'type' == 'phone'.
+
+    @apiErrorExample {json} Error-Response:
+        HTTP/1.1 403 FORBIDDEN
+        {
+            "error": "WrongMessage",
+            "message": "wrong message"
+        }
+
+    @apiUse InvalidRequestError
+    @apiUse UnknownError
+    """
 login_status = [200, 201, 500, 403, 403, 400]
-login_message = ["登陆成功", "登陆成功", "未知错误", "缺少短信验证码", "短信验证码错误", "无效请求"]
+login_message = ["success", "success", "unknown error", "need message", "wrong message", "invalid request"]
+login_error = ["", "", "UnknownError", "NeedMessage", "WrongMessage", "InvalidRequest"]
 @app.route('/login', methods = ['POST'])
 def login():
     ret = {}
@@ -61,8 +107,11 @@ def login():
 
     if status == 0 or status == 1:
         ret['username'] = username
-        ret['token'] = user.generate_auth_token().decode('ascii')
         ret['rftoken'] = user.generate_auth_token(app.config['LONG_LIFE_TIME']).decode('ascii')
+        ret['token'] = user.generate_auth_token().decode('ascii')
+        ret['expires'] = app.config['LIFE_TIME']
+    else:
+        ret['error'] = login_error[status]
 
     response = make_response(json.dumps(ret))
     response.headers['Content-Type'] = 'application/json;charset=utf8'
@@ -70,6 +119,25 @@ def login():
     return response
 
 
+    """
+    @api {get} /token Get Token
+    @apiVersion 0.1.0
+    @apiName Token
+    @apiGroup General
+    @apiPermission rank(1)
+    @apiDescription API for user to get token with rftoken.
+
+    @apiUse Authorization
+
+    @apiSuccess {String} token User's access token.
+    @apiSuccessExample {json} Success-Response:
+        HTTP/1.1 200 OK
+        {
+            "token": "eyJhbGciOiJIUzI1NiIsImlhdCI6MTU0ODg0NjYxNywiZXhwIjoxNTQ4ODUzODE3fQ.eyJ1c2VybmFtZSI6IlRlbDExODkzNDYwIiwibGlmZXRpbWUiOjcyMDAsInJhbmQiOjU0MzB9.HzF56MKEBqftIipLkMhP0sJI43U5RqNK2E5lS2PLDCM"
+        }
+
+    @apiUse UnauthorizedError
+    """
 @app.route('/token', methods = ['GET'])
 @auth.login_required
 def token():
@@ -82,8 +150,28 @@ def token():
     return response
 
 
+    """
+    @api {post} /logout User Logout
+    @apiVersion 0.1.0
+    @apiName Logout
+    @apiGroup General
+    @apiPermission rank(1)
+    @apiDescription API for user to logout.
+
+    @apiUse Authorization
+
+    @apiSuccess {String} message User's logout status: 'success'.
+    @apiSuccessExample {json} Success-Response:
+        HTTP/1.1 200 OK
+        {
+            "message": "success"
+        }
+
+    @apiUse UnauthorizedError
+    @apiUse InvalidRequestError
+    """
 logout_status = [200, 400]
-logout_message = ["登出成功", "无效请求"]
+logout_message = ["success", "invalid request"]
 @app.route('/logout', methods = ['POST'])
 @auth.login_required
 def logout():
@@ -96,19 +184,41 @@ def logout():
         status = 0
     ret['message'] = logout_message[status]
 
-    if status == 0:
-        return redirect(url_for('index'))
     response = make_response(json.dumps(ret))
     response.headers['Content-Type'] = 'application/json;charset=utf8'
     response.status_code = logout_status[status]
     return response
 
 
-@app.route('/message/<phonenumber>', methods = ['POST'])
-def message(phonenumber):
+    """
+    @api {post} /message Get Text Message
+    @apiVersion 0.1.0
+    @apiName Message
+    @apiGroup General
+    @apiPermission rank(0)
+    @apiDescription API for user to get text message.
+
+    @apiParam {String} phonenumber User's phnoe number.
+
+    @apiSuccess {String} message Text message sending status: 'success'.
+    @apiSuccessExample {json} Success-Response:
+        HTTP/1.1 202 OK
+        {
+            "message": "success"
+        }
+
+    @apiUse InvalidRequestError
+    """
+message_status = [202, 400]
+message_message = ["success", "invalid request"]
+@app.route('/message', methods = ['POST'])
+def message():
+    ret = {}
+    data = json.loads(request.get_data())
     if accessmanager.auth(1, "POST", "/message") is False:
-        status = 400
+        status = 1
     else:
+        phonenumber = data['phonenumber']
         message = TextMessage.TextMessage()
         businessID = str(random.randint(100000,999999))
         lastTextMessage = str(random.randint(100000,999999))
@@ -123,11 +233,12 @@ def message(phonenumber):
             m.message = lastTextMessage
         db.session.add(m)
         db.session.commit()
-        status = 202
+        status = 0
+    ret['message'] = message_message[status]
 
-    response = make_response()
+    response = make_response(json.dumps(ret))
     response.headers['Content-Type'] = 'application/json;charset=utf8'
-    response.status_code = status
+    response.status_code = message_status[status]
     return response
 
 

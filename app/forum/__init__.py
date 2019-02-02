@@ -1,7 +1,7 @@
 from flask import Blueprint
 from flask_restful import Resource, Api
 
-article = Blueprint('article', __name__)
-api = Api(article)
+forum = Blueprint('forum', __name__)
+api = Api(forum)
 
 from . import views, models, views

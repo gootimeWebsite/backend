@@ -16,4 +16,7 @@ app.register_blueprint(user_blueprint, url_prefix='/user')
 from .article import article as article_blueprint
 app.register_blueprint(article_blueprint, url_prefix='/article')
 
+from .forum import forum as forum_blueprint
+app.register_blueprint(forum_blueprint, url_prefix='/forum')
+
 from app import views, models, access

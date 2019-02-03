@@ -49,3 +49,16 @@
         "message": "unknown error"
     }
 """
+
+"""
+@apiDefine PostNotFoundError
+@apiVersion 0.1.0
+
+@apiError PostNotFound Post Not Found.
+
+@apiErrorExample {json} Error-Response:
+    HTTP/1.1 404 NOT FOUND
+    {
+        "message": "post not found"
+    }
+"""

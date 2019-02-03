@@ -9,10 +9,94 @@ from app import auth
 class ForumHomePage(Resource):
     decorators = [auth.login_required]
 
+    """
+    @api {get} /forum Get Forum HomePage
+    @apiVersion 0.1.0
+    @apiName GetForum
+    @apiGroup Forum
+    @apiPermission rank(1)
+    @apiDescription API for user to get forum homepage in which the posts are sorted in chronological order.
+
+    @apiUse Authorization
+
+    @apiSuccess {String} data Post's data list.
+    @apiSuccess {String} data[i].auther Post's auther.
+    @apiSuccess {String} data[i].content Post's content.
+    @apiSuccess {String} data[i].id Post's id.
+    @apiSuccess {String} data[i].title Post's title.
+    @apiSuccess {String} data[i].updatetime Post's updatetime.
+    @apiSuccess {String} message Post's getting status: 'success'.
+    @apiSuccessExample {json} Success-Response:
+        HTTP/1.1 200 OK
+        {
+            "data": [
+                {
+                    "auther": "Tel72250567",
+                    "content": "This is a test!",
+                    "id": "511053",
+                    "title": "Test",
+                    "updatetime": "Sun, 03 Feb 2019 04:26:31 GMT"
+                },
+                {
+                    "auther": "Tel72250567",
+                    "content": "This is a PATCH test!",
+                    "id": "125421",
+                    "title": "Test",
+                    "updatetime": "Sat, 02 Feb 2019 22:09:08 GMT"
+                }
+            ],
+            "message": "success"
+        }
+
+    @apiUse UnauthorizedError
+    @apiUse UnknownError
+    """
     def get(self):
-        return "GET ForumHomePage!"
+        ret = {}
+        ret['data'] = []
+
+        posts = sorted(Forum.query.all(), key=lambda post: post.updatetime, reverse=True)
+        for item in posts:
+            (ret['message'], data) = item.dict()
+            if ret['message'] == "success":
+                status = 200
+                ret['data'].append(data)
+            else:
+                status = 500
+                ret['error'] = "UnknownError"
+                break
+
+        response = make_response(json.dumps(ret))
+        response.headers['Content-Type'] = 'application/json;charset=utf8'
+        response.status_code = status
+        return response
 
 
+    """
+    @api {post} /forum Create A New Forum Post
+    @apiVersion 0.1.0
+    @apiName PostForum
+    @apiGroup Forum
+    @apiPermission rank(1)
+    @apiDescription API for user to create a new post.
+
+    @apiUse Authorization
+    @apiParam {String} title The title of the post.
+    @apiParam {String} auther The auther's username.
+    @apiParam {String} content The content of the post.
+
+    @apiSuccess {String} id Post's id.
+    @apiSuccess {String} message Post's creation status: 'success'.
+    @apiSuccessExample {json} Success-Response:
+        HTTP/1.1 201 OK
+        {
+            "id": "901350",
+            "message": "success"
+        }
+
+    @apiUse UnauthorizedError
+    @apiUse InvalidRequestError
+    """
     def post(self):
         ret = {}
         data = json.loads(request.get_data())
@@ -22,7 +106,8 @@ class ForumHomePage(Resource):
             ret['message'] = "success"
             status = 201
         except:
-            ret['message'] = "bad request"
+            ret['error'] = "InvalidRequest"
+            ret['message'] = "invalid request"
             status = 400
 
         response = make_response(json.dumps(ret))
@@ -35,6 +120,40 @@ class ForumHomePage(Resource):
 class ForumPost(Resource):
     decorators = [auth.login_required]
 
+    """
+    @api {get} /forum/:id Get Forum Post
+    @apiVersion 0.1.0
+    @apiName GetForumID
+    @apiGroup Forum
+    @apiPermission rank(1)
+    @apiDescription API for user to get a post.
+
+    @apiUse Authorization
+
+    @apiSuccess {String} data Post's data.
+    @apiSuccess {String} data.auther Post's auther.
+    @apiSuccess {String} data.content Post's content.
+    @apiSuccess {String} data.id Post's id.
+    @apiSuccess {String} data.title Post's title.
+    @apiSuccess {String} data.updatetime Post's updatetime.
+    @apiSuccess {String} message Post's getting status: 'success'.
+    @apiSuccessExample {json} Success-Response:
+        HTTP/1.1 200 OK
+        {
+            "data": {
+                "auther": "Tel72250567",
+                "content": "This is a test!",
+                "id": "901350",
+                "title": "Test",
+                "updatetime": "Sat, 02 Feb 2019 23:20:46 GMT"
+            },
+            "message": "success"
+        }
+
+    @apiUse UnauthorizedError
+    @apiUse PostNotFoundError
+    @apiUse UnknownError
+    """
     def get(self, id):
         ret = {}
 
@@ -44,7 +163,11 @@ class ForumPost(Resource):
             status = 404
         else:
             (ret['message'], ret['data']) = post.dict()
-            status = 200 if ret['message'] == "success" else 500
+            if ret['message'] == "success":
+                status = 200
+            else:
+                status = 500
+                ret['error'] = "UnknownError"
 
         response = make_response(json.dumps(ret))
         response.headers['Content-Type'] = 'application/json;charset=utf8'
@@ -52,6 +175,29 @@ class ForumPost(Resource):
         return response
 
 
+    """
+    @api {put} /forum/:id Update Forum Post
+    @apiVersion 0.1.0
+    @apiName PutForumID
+    @apiGroup Forum
+    @apiPermission rank(1)
+    @apiDescription API for user to update a post.
+
+    @apiUse Authorization
+    @apiParam {String} title New title of the post.
+    @apiParam {String} content New content of the post.
+
+    @apiSuccess {String} message Post's putting status: 'success'.
+    @apiSuccessExample {json} Success-Response:
+        HTTP/1.1 200 OK
+        {
+            "message": "success"
+        }
+
+    @apiUse UnauthorizedError
+    @apiUse PostNotFoundError
+    @apiUse InvalidRequestError
+    """
     def put(self, id):
         ret = {}
         data = json.loads(request.get_data())
@@ -65,7 +211,8 @@ class ForumPost(Resource):
                 ret['message'] = post.update(title=data['title'], content=data['content'])
                 status = 200 if ret['message'] == "success" else 500
             except:
-                ret['message'] = "bad request"
+                ret['error'] = "InvalidRequest"
+                ret['message'] = "invalid request"
                 status = 400
 
         response = make_response(json.dumps(ret))
@@ -74,6 +221,31 @@ class ForumPost(Resource):
         return response
 
 
+    """
+    @api {patch} /forum/:id Update Forum Post
+    @apiVersion 0.1.0
+    @apiName PatchForumID
+    @apiGroup Forum
+    @apiPermission rank(1)
+    @apiDescription API for user to update a part of a post.
+
+    @apiUse Authorization
+    @apiParam {String} type The part of the update: 'title', 'content'.
+    @apiParam {String} title New title of the post when 'type' = 'title'.
+    @apiParam {String} content New content of the post when 'type' = 'content'.
+
+    @apiSuccess {String} message Post's patching status: 'success'.
+    @apiSuccessExample {json} Success-Response:
+        HTTP/1.1 200 OK
+        {
+            "message": "success"
+        }
+
+    @apiUse UnauthorizedError
+    @apiUse PostNotFoundError
+    @apiUse UnknownError
+    @apiUse InvalidRequestError
+    """
     def patch(self, id):
         ret = {}
         data = json.loads(request.get_data())
@@ -86,15 +258,25 @@ class ForumPost(Resource):
             try:
                 if data['type'] == "title":
                     ret['message'] = post.update(title=data['title'])
-                    status = 200 if ret['message'] == "success" else 500
+                    if ret['message'] == "success":
+                        status = 200
+                    else:
+                        status = 500
+                        ret['error'] = "UnknownError"
                 elif data['type'] == "content":
                     ret['message'] = post.update(content=data['content'])
-                    status = 200 if ret['message'] == "success" else 500
+                    if ret['message'] == "success":
+                        status = 200
+                    else:
+                        status = 500
+                        ret['error'] = "UnknownError"
                 else:
+                    ret['error'] = "UnknownError"
                     ret['message'] = "unknown error"
                     status = 500
             except:
-                ret['message'] = "bad request"
+                ret['error'] = "InvalidRequest"
+                ret['message'] = "invalid request"
                 status = 400
 
         response = make_response(json.dumps(ret))
@@ -103,6 +285,27 @@ class ForumPost(Resource):
         return response
 
 
+    """
+    @api {delete} /forum/:id Delete Forum Post
+    @apiVersion 0.1.0
+    @apiName DeleteForumID
+    @apiGroup Forum
+    @apiPermission rank(1)
+    @apiDescription API for user to delete a post.
+
+    @apiUse Authorization
+
+    @apiSuccess {String} message Post's deleting status: 'success'.
+    @apiSuccessExample {json} Success-Response:
+        HTTP/1.1 200 OK
+        {
+            "message": "success"
+        }
+
+    @apiUse UnauthorizedError
+    @apiUse PostNotFoundError
+    @apiUse UnknownError
+    """
     def delete(self, id):
         ret = {}
 
@@ -117,8 +320,9 @@ class ForumPost(Resource):
                 ret['message'] = "success"
                 status = 200
             except:
-                ret['message'] = "bad request"
-                status = 400
+                ret['error'] = "UnknownError"
+                ret['message'] = "unknown error"
+                status = 500
 
         response = make_response(json.dumps(ret))
         response.headers['Content-Type'] = 'application/json;charset=utf8'

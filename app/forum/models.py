@@ -27,7 +27,7 @@ class Forum(db.Model):
             ret['updatetime'] = self.updatetime
             return ("success", ret)
         except:
-            return ("error", ret)
+            return ("unknown error", ret)
 
     def insert(self, title, auther, content):
         self.id = random.randint(100000, 999999)
@@ -49,4 +49,4 @@ class Forum(db.Model):
             db.session.commit()
             return "success"
         except:
-            return "error"
+            return "unknown error"

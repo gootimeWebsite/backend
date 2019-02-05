@@ -2,8 +2,22 @@
 from flask import *
 from flask_restful import Resource
 from . import forum, api
-from .models import Forum, db
+from .models import Forum, Permission, db
 from app import auth
+from functools import wraps
+
+def permission_required(p):
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if not g.user.forum_can(p):
+                abort(403)
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
+def admin_required(f):
+    return permission_required(Permission.ADMINISTER)(f)
 
 @api.resource('/')
 class ForumHomePage(Resource):
@@ -54,6 +68,7 @@ class ForumHomePage(Resource):
     def get(self):
         ret = {}
         ret['data'] = []
+        status = 200
 
         posts = sorted(Forum.query.all(), key=lambda post: post.updatetime, reverse=True)
         for item in posts:
@@ -82,7 +97,6 @@ class ForumHomePage(Resource):
 
     @apiUse Authorization
     @apiParam {String} title The title of the post.
-    @apiParam {String} auther The auther's username.
     @apiParam {String} content The content of the post.
 
     @apiSuccess {String} id Post's id.
@@ -97,12 +111,13 @@ class ForumHomePage(Resource):
     @apiUse UnauthorizedError
     @apiUse InvalidRequestError
     """
+    @permission_required(Permission.POST)
     def post(self):
         ret = {}
         data = json.loads(request.get_data())
 
         try:
-            ret['id'] = Forum().insert(data['title'], data['auther'], data['content'])
+            ret['id'] = Forum().insert(data['title'], g.user.username, data['content'])
             ret['message'] = "success"
             status = 201
         except:
@@ -198,6 +213,7 @@ class ForumPost(Resource):
     @apiUse PostNotFoundError
     @apiUse InvalidRequestError
     """
+    @permission_required(Permission.POST)
     def put(self, id):
         ret = {}
         data = json.loads(request.get_data())
@@ -207,13 +223,18 @@ class ForumPost(Resource):
             ret['message'] = "post not found"
             status = 404
         else:
-            try:
-                ret['message'] = post.update(title=data['title'], content=data['content'])
-                status = 200 if ret['message'] == "success" else 500
-            except:
+            if post.auther != g.user.username:
                 ret['error'] = "InvalidRequest"
                 ret['message'] = "invalid request"
                 status = 400
+            else:
+                try:
+                    ret['message'] = post.update(title=data['title'], content=data['content'])
+                    status = 200 if ret['message'] == "success" else 500
+                except:
+                    ret['error'] = "InvalidRequest"
+                    ret['message'] = "invalid request"
+                    status = 400
 
         response = make_response(json.dumps(ret))
         response.headers['Content-Type'] = 'application/json;charset=utf8'
@@ -243,9 +264,10 @@ class ForumPost(Resource):
 
     @apiUse UnauthorizedError
     @apiUse PostNotFoundError
-    @apiUse UnknownError
     @apiUse InvalidRequestError
+    @apiUse UnknownError
     """
+    @permission_required(Permission.POST)
     def patch(self, id):
         ret = {}
         data = json.loads(request.get_data())
@@ -255,29 +277,34 @@ class ForumPost(Resource):
             ret['message'] = "post not found"
             status = 404
         else:
-            try:
-                if data['type'] == "title":
-                    ret['message'] = post.update(title=data['title'])
-                    if ret['message'] == "success":
-                        status = 200
-                    else:
-                        status = 500
-                        ret['error'] = "UnknownError"
-                elif data['type'] == "content":
-                    ret['message'] = post.update(content=data['content'])
-                    if ret['message'] == "success":
-                        status = 200
-                    else:
-                        status = 500
-                        ret['error'] = "UnknownError"
-                else:
-                    ret['error'] = "UnknownError"
-                    ret['message'] = "unknown error"
-                    status = 500
-            except:
+            if post.auther != g.user.username:
                 ret['error'] = "InvalidRequest"
                 ret['message'] = "invalid request"
                 status = 400
+            else:
+                try:
+                    if data['type'] == "title":
+                        ret['message'] = post.update(title=data['title'])
+                        if ret['message'] == "success":
+                            status = 200
+                        else:
+                            status = 500
+                            ret['error'] = "UnknownError"
+                    elif data['type'] == "content":
+                        ret['message'] = post.update(content=data['content'])
+                        if ret['message'] == "success":
+                            status = 200
+                        else:
+                            status = 500
+                            ret['error'] = "UnknownError"
+                    else:
+                        ret['error'] = "UnknownError"
+                        ret['message'] = "unknown error"
+                        status = 500
+                except:
+                    ret['error'] = "InvalidRequest"
+                    ret['message'] = "invalid request"
+                    status = 400
 
         response = make_response(json.dumps(ret))
         response.headers['Content-Type'] = 'application/json;charset=utf8'
@@ -304,8 +331,10 @@ class ForumPost(Resource):
 
     @apiUse UnauthorizedError
     @apiUse PostNotFoundError
+    @apiUse InvalidRequestError
     @apiUse UnknownError
     """
+    @permission_required(Permission.POST)
     def delete(self, id):
         ret = {}
 
@@ -314,15 +343,20 @@ class ForumPost(Resource):
             ret['message'] = "post not found"
             status = 404
         else:
-            try:
-                db.session.delete(post)
-                db.session.commit()
-                ret['message'] = "success"
-                status = 200
-            except:
-                ret['error'] = "UnknownError"
-                ret['message'] = "unknown error"
-                status = 500
+            if post.auther != g.user.username and not g.user.forum_is_administrator():
+                ret['error'] = "InvalidRequest"
+                ret['message'] = "invalid request"
+                status = 400
+            else:
+                try:
+                    db.session.delete(post)
+                    db.session.commit()
+                    ret['message'] = "success"
+                    status = 200
+                except:
+                    ret['error'] = "UnknownError"
+                    ret['message'] = "unknown error"
+                    status = 500
 
         response = make_response(json.dumps(ret))
         response.headers['Content-Type'] = 'application/json;charset=utf8'

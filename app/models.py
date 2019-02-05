@@ -1,4 +1,6 @@
 from app import db, app
+from .forum.models import Permission as ForumPermission
+from .article.models import Permission as ArticlePermission
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer, SignatureExpired, BadSignature
 from datetime import datetime, timedelta
 import random
@@ -14,9 +16,10 @@ class User(db.Model):
     phonenumber = db.Column(db.String(11), unique=True, nullable=True)
     weixin = db.Column(db.String(30), unique=True, nullable=True)
     qq = db.Column(db.String(12), unique=True, nullable=True)
-    rulesID = db.Column(db.Integer, db.ForeignKey('rules.id', ondelete="CASCADE", onupdate="CASCADE"), nullable=False, default=1)
     articles = db.relationship('Article', backref='Auther', lazy='dynamic')
+    article_roleID = db.Column(db.Integer, db.ForeignKey('article_roles.id', ondelete="CASCADE", onupdate="CASCADE"))
     forums = db.relationship('Forum', backref='Auther', lazy='dynamic')
+    forum_roleID = db.Column(db.Integer, db.ForeignKey('forum_roles.id', ondelete="CASCADE", onupdate="CASCADE"))
     rand = db.Column(db.Integer, nullable=False, default=1)
 
     def __repr__(self):
@@ -44,33 +47,17 @@ class User(db.Model):
             return None
         return user
 
+    def forum_can(self, p):
+        return self.forum_role is not None and self.forum_role.has_permission(p)
 
-class Rules(db.Model):
-    __tablename__ = 'rules'
-    __table_args__ = {
-        'mysql_charset' : 'utf8'
-    }
+    def forum_is_administrator(self):
+        return self.forum_can(ForumPermission.ADMINISTER)
 
-    id = db.Column(db.Integer, primary_key=True, unique=True, nullable=False)
-    description = db.Column(db.Text, nullable=False)
-    user = db.relationship('User', backref='rules', lazy='dynamic')
+    def article_can(self, p):
+        return self.article_role is not None and self.article_role.has_permission(p)
 
-    def __repr__(self):
-        return '<ID %r>' % self.id
-
-
-class Access(db.Model):
-    __tablename__ = 'access'
-    __table_args__ = {
-        'mysql_charset' : 'utf8'
-    }
-
-    id = db.Column(db.Integer, primary_key=True, unique=True, nullable=False)
-    action = db.Column(db.Text, nullable=False)
-    rank = db.Column(db.Integer, nullable=False)
-
-    def __repr__(self):
-        return '<ID %r>' % self.id
+    def article_is_administrator(self):
+        return self.article_can(ArticlePermission.ADMINISTER)
 
 
 class Messages(db.Model):

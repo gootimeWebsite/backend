@@ -3,7 +3,6 @@ from flask import *
 from app import app, auth
 from .models import *
 from .user.manager import usermanager
-from .access import accessmanager
 from .textMessage import TextMessage
 import random, json
 
@@ -70,39 +69,36 @@ def login():
     ret = {}
     data = json.loads(request.get_data())
 
-    if accessmanager.auth(1, "POST", "/login") is False:
-        status = 5
-    else:
-        if data['type'] == 'phone':
-            m = Messages.query.filter_by(phonenumber=data['phonenumber']).first()
-            if m is None:
-                status = 3
-            elif m.message != data['message']:
-                status = 4
-            else:
-                db.session.delete(m)
-                db.session.commit()
-                user = usermanager.search(data['phonenumber'], "phonenumber")
-                if user is None:
-                    username = "Tel" + str(random.randint(10000000, 99999999))
-                    while usermanager.search(username, "username") is not None:
-                        username = "Tel" + str(random.randint(10000000, 99999999))
-                    user = usermanager.insert(username, data['phonenumber'], "", "")
-                    if user is not None:
-                        status = 1
-                    else:
-                        status = 2
-                else:
-                    username = user.username
-                    status = 0
-        elif data['type'] == 'weixin':
-            #微信登录
-            pass
-        elif data['type'] == 'qq':
-            #qq登录
-            pass
+    if data['type'] == 'phone':
+        m = Messages.query.filter_by(phonenumber=data['phonenumber']).first()
+        if m is None:
+            status = 3
+        elif m.message != data['message']:
+            status = 4
         else:
-            status = 2
+            db.session.delete(m)
+            db.session.commit()
+            user = usermanager.search(data['phonenumber'], "phonenumber")
+            if user is None:
+                username = "Tel" + str(random.randint(10000000, 99999999))
+                while usermanager.search(username, "username") is not None:
+                    username = "Tel" + str(random.randint(10000000, 99999999))
+                user = usermanager.insert(username, data['phonenumber'], "", "")
+                if user is not None:
+                    status = 1
+                else:
+                    status = 2
+            else:
+                username = user.username
+                status = 0
+    elif data['type'] == 'weixin':
+        #微信登录
+        pass
+    elif data['type'] == 'qq':
+        #qq登录
+        pass
+    else:
+        status = 2
     ret['message'] = login_message[status]
 
     if status == 0 or status == 1:
@@ -178,10 +174,7 @@ def logout():
     ret = {}
     data = json.loads(request.get_data())
 
-    if accessmanager.auth(1, "POST", "/logout") is False:
-        status = 1
-    else:
-        status = 0
+    status = 0
     ret['message'] = logout_message[status]
 
     response = make_response(json.dumps(ret))
@@ -215,25 +208,23 @@ message_message = ["success", "invalid request"]
 def message():
     ret = {}
     data = json.loads(request.get_data())
-    if accessmanager.auth(1, "POST", "/message") is False:
-        status = 1
-    else:
-        phonenumber = data['phonenumber']
-        message = TextMessage.TextMessage()
-        businessID = str(random.randint(100000,999999))
-        lastTextMessage = str(random.randint(100000,999999))
-        dic = {}
-        dic['code'] = lastTextMessage
-        #text = message.sendSMS(businessID, phonenumber, dic) #发送短信验证码接口
 
-        m = Messages.query.filter_by(phonenumber=phonenumber).first()
-        if m is None:
-            m = Messages(phonenumber=phonenumber, message=lastTextMessage)
-        else:
-            m.message = lastTextMessage
-        db.session.add(m)
-        db.session.commit()
-        status = 0
+    phonenumber = data['phonenumber']
+    message = TextMessage.TextMessage()
+    businessID = str(random.randint(100000,999999))
+    lastTextMessage = str(random.randint(100000,999999))
+    dic = {}
+    dic['code'] = lastTextMessage
+    #text = message.sendSMS(businessID, phonenumber, dic) #发送短信验证码接口
+
+    m = Messages.query.filter_by(phonenumber=phonenumber).first()
+    if m is None:
+        m = Messages(phonenumber=phonenumber, message=lastTextMessage)
+    else:
+        m.message = lastTextMessage
+    db.session.add(m)
+    db.session.commit()
+    status = 0
     ret['message'] = message_message[status]
 
     response = make_response(json.dumps(ret))

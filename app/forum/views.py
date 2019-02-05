@@ -28,7 +28,7 @@ class ForumHomePage(Resource):
     @apiVersion 0.1.0
     @apiName GetForum
     @apiGroup Forum
-    @apiPermission rank(1)
+    @apiPermission User
     @apiDescription API for user to get forum homepage in which the posts are sorted in chronological order.
 
     @apiUse Authorization
@@ -92,7 +92,7 @@ class ForumHomePage(Resource):
     @apiVersion 0.1.0
     @apiName PostForum
     @apiGroup Forum
-    @apiPermission rank(1)
+    @apiPermission User
     @apiDescription API for user to create a new post.
 
     @apiUse Authorization
@@ -140,7 +140,7 @@ class ForumPost(Resource):
     @apiVersion 0.1.0
     @apiName GetForumID
     @apiGroup Forum
-    @apiPermission rank(1)
+    @apiPermission User
     @apiDescription API for user to get a post.
 
     @apiUse Authorization
@@ -195,7 +195,7 @@ class ForumPost(Resource):
     @apiVersion 0.1.0
     @apiName PutForumID
     @apiGroup Forum
-    @apiPermission rank(1)
+    @apiPermission User
     @apiDescription API for user to update a post.
 
     @apiUse Authorization
@@ -247,7 +247,7 @@ class ForumPost(Resource):
     @apiVersion 0.1.0
     @apiName PatchForumID
     @apiGroup Forum
-    @apiPermission rank(1)
+    @apiPermission User
     @apiDescription API for user to update a part of a post.
 
     @apiUse Authorization
@@ -317,7 +317,7 @@ class ForumPost(Resource):
     @apiVersion 0.1.0
     @apiName DeleteForumID
     @apiGroup Forum
-    @apiPermission rank(1)
+    @apiPermission User
     @apiDescription API for user to delete a post.
 
     @apiUse Authorization

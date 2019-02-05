@@ -24,7 +24,6 @@ def verify_token(token):
     @apiVersion 0.1.0
     @apiName Login
     @apiGroup General
-    @apiPermission rank(0)
     @apiDescription API for user to login.
 
     @apiParam {String} type The way user login: 'phone', 'weixin', 'qq'.
@@ -120,7 +119,7 @@ def login():
     @apiVersion 0.1.0
     @apiName Token
     @apiGroup General
-    @apiPermission rank(1)
+    @apiPermission User
     @apiDescription API for user to get token with rftoken.
 
     @apiUse Authorization
@@ -151,7 +150,7 @@ def token():
     @apiVersion 0.1.0
     @apiName Logout
     @apiGroup General
-    @apiPermission rank(1)
+    @apiPermission User
     @apiDescription API for user to logout.
 
     @apiUse Authorization
@@ -188,7 +187,6 @@ def logout():
     @apiVersion 0.1.0
     @apiName Message
     @apiGroup General
-    @apiPermission rank(0)
     @apiDescription API for user to get text message.
 
     @apiParam {String} phonenumber User's phnoe number.

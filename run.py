@@ -62,9 +62,9 @@ def connectdb(username, password):
     f.close()
     conf = []
     for line in lines:
-        if line.find("SQL_USERNAME =") != -1:
+        if line.find("SQL_USERNAME =") != -1 and username:
             line = "SQL_USERNAME = \"" + username + "\"\n"
-        elif line.find("SQL_PASSWORD =") != -1:
+        elif line.find("SQL_PASSWORD =") != -1 and password:
             line = "SQL_PASSWORD = \"" + password + "\"\n"
         conf.append(line)
     with open('config.py', 'w') as f:

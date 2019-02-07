@@ -26,6 +26,7 @@ class ArticleInfo(Resource):
             ret_article['content'] = post.content
             ret_article['category'] = post.category
             ret_article['updatetime'] = post.updatetime
+            ret_article['id'] = post.id
             ret['message'] = "success"
             ret['data'] = ret_article
             status = 200
@@ -54,7 +55,9 @@ class ArticleInfo(Resource):
                 ret_article['title'] = data['title']
                 ret_article['content'] = data['content']
                 ret_article['category'] = data['category']
-                post.updatetime = datetime.now()+timedelta(hours=8)                
+                ret_article['id'] = post.id
+                post.updatetime = datetime.now()+timedelta(hours=8)       
+                ret_article['updatetime'] = post.updatetime
                 db.session.commit()
                 status = 200 
                 ret['data'] = ret_article
@@ -86,10 +89,13 @@ class ArticleInfo(Resource):
                     post.category = data['category']
                 if data.__contains__('content'):
                     post.content = data['content']
+                post.updatetime = datetime.now()+timedelta(hours=8)
                 ret_article['auther'] = post.auther
                 ret_article['title'] = post.title
                 ret_article['content'] = post.content
                 ret_article['category'] = post.category
+                ret_article['updatetime'] = post.updatetime
+                ret_article['id'] = post.id
                 post.updatetime = datetime.now()+timedelta(hours=8)                
                 db.session.commit()
                 status = 200 
@@ -140,7 +146,7 @@ class Article1(Resource):
         else:
             ret['message'] = "success"
             for item in post:
-                ret_article.append({"auther":item.auther,"title":item.title,"content":item.content,"category":item.category,"updatetime":item.updatetime})
+                ret_article.append({"id":item.id,"auther":item.auther,"title":item.title,"content":item.content,"category":item.category,"updatetime":item.updatetime})
                 ret['data'] = ret_article
             status = 200
 
@@ -166,6 +172,8 @@ class Article1(Resource):
             ret_article['title'] = title
             ret_article['content'] = content
             ret_article['category'] = category
+            ret_article['id'] = article.id
+            ret_article['updatetime'] = article.updatetime
             ret['message'] = "success"
             ret['data'] = ret_article
             status = 201

@@ -15,12 +15,12 @@
 完成了认证功能，用户登录返回短期token和长期rftoken  
 完成了蓝图中restfulAPI的框架设计  
 完成了用户权限的数据库设计  
+完成了初步的后台设计  
 
 API：见apidoc文档
 
 下一步工作：  
 - 完成API
-- 搭建终端后台，封装后台操作方法
 - 完善单元测试
 - 搭建日志系统，增强易维护性
 
@@ -29,10 +29,17 @@ API：见apidoc文档
 依赖库安装：  
 `pip install -r requirements.txt`  
 
-Python3.6本地运行：  
-`python run.py`
-
 创建数据库：  
-`python create_db.py`  
+`python run.py connectdb -u <username> -p <password>`  
+配置文件见 config.py  
 
-配置文件见 config.py
+初始化数据库，创建数据表：  
+`python run.py initdb`  
+
+Python3.6本地运行：  
+`python run.py` (debug模式) 或：  
+`python run.py runserver -d <debug> -h <host> -p <port>`  
+
+后台终端:  
+`python run.py shell`  
+其中调用run()函数运行服务器 (非debug模式)

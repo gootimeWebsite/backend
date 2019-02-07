@@ -18,7 +18,7 @@ class ArticleInfo(Resource):
         ret_article={}
         post = Article.query.filter_by(id=id).first()
         if post is None:
-            ret['message'] = "not found"
+            ret['message'] = "not found error"
             status = 404
         else:
             ret_article['auther'] = post.auther
@@ -26,7 +26,7 @@ class ArticleInfo(Resource):
             ret_article['content'] = post.content
             ret_article['category'] = post.category
             ret_article['updatetime'] = post.updatetime
-            ret['message'] = "found"
+            ret['message'] = "success"
             ret['data'] = ret_article
             status = 200
 
@@ -42,7 +42,7 @@ class ArticleInfo(Resource):
         ret_article={}
         post = Article.query.filter_by(id=id).first()
         if post is None:
-            ret['message'] = "post not found"
+            ret['message'] = "request error"
             status = 404
         else:
             try:
@@ -60,7 +60,7 @@ class ArticleInfo(Resource):
                 ret['data'] = ret_article
                 ret['message'] = "success"
             except:
-                ret['message'] = "fail"
+                ret['message'] = "put error"
                 status = 400
 
         response = make_response(json.dumps(ret))
@@ -74,7 +74,7 @@ class ArticleInfo(Resource):
         ret_article={}
         post = Article.query.filter_by(id=id).first()
         if post is None:
-            ret['message'] = "post not found"
+            ret['message'] = "request error"
             status = 404
         else:
             try:
@@ -96,7 +96,7 @@ class ArticleInfo(Resource):
                 ret['data'] = ret_article
                 ret['message'] = "success"
             except:
-                ret['message'] = "fail"
+                ret['message'] = "patch error"
                 status = 400
 
         response = make_response(json.dumps(ret))
@@ -109,7 +109,7 @@ class ArticleInfo(Resource):
 
         post = Article.query.filter_by(id=id).first()
         if post is None:
-            ret['message'] = "not found"
+            ret['message'] = "not found error"
             status = 404
         else:
             try:
@@ -118,8 +118,60 @@ class ArticleInfo(Resource):
                 ret['message'] = "success"
                 status = 200
             except:
-                ret['message'] = "bad request"
+                ret['message'] = "delete error"
                 status = 400
+
+        response = make_response(json.dumps(ret))
+        response.headers['Content-Type'] = 'application/json;charset=utf8'
+        response.status_code = status
+        return response
+    
+    
+@api.resource('/')
+class Article1(Resource):
+    decorators = [auth.login_required]
+    def get(self):
+        ret = {}
+        ret_article=[]
+        post = Article.query.all()
+        if post is None or post == []:
+            ret['message'] = "not found error"
+            status = 404
+        else:
+            ret['message'] = "success"
+            for item in post:
+                ret_article.append({"auther":item.auther,"title":item.title,"content":item.content,"category":item.category,"updatetime":item.updatetime})
+                ret['data'] = ret_article
+            status = 200
+
+        response = make_response(json.dumps(ret))
+        response.headers['Content-Type'] = 'application/json;charset=utf8'
+        response.status_code = status
+        return response
+    def post(self):
+        ret = {}
+        ret_article={}
+        data = json.loads(request.get_data())
+        try:
+            title = data['title']
+            auther = data['auther']
+            category = data['category']
+            content = str(data['content'])
+            
+            article = Article(title=title,auther=auther,category=category,content=content)
+
+            db.session.add(article)
+            db.session.commit()
+            ret_article['auther'] = auther
+            ret_article['title'] = title
+            ret_article['content'] = content
+            ret_article['category'] = category
+            ret['message'] = "success"
+            ret['data'] = ret_article
+            status = 201
+        except:
+            status = 400
+            ret['message'] = "post error"
 
         response = make_response(json.dumps(ret))
         response.headers['Content-Type'] = 'application/json;charset=utf8'

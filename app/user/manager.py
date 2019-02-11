@@ -1,4 +1,6 @@
 from ..models import User, db
+from ..forum.models import ForumRole
+from ..article.models import ArticleRole
 import json
 
 class UserManager:
@@ -20,9 +22,14 @@ class UserManager:
         return ret
 
 
-    def insert(self, username, phonenumber, weixin, qq):
+    def insert(self, username, phonenumber, weixin, qq, default=True):
         try:
-            user = User(username=username, phonenumber=phonenumber, weixin=weixin, qq=qq)
+            if default:
+                article_role = ArticleRole.query.filter_by(default=True).first()
+                forum_role = ForumRole.query.filter_by(default=True).first()
+                user = User(username=username, phonenumber=phonenumber, weixin=weixin, qq=qq, article_roleID=article_role.id, forum_roleID=forum_role.id)
+            else:
+                user = User(username=username, phonenumber=phonenumber, weixin=weixin, qq=qq)
             db.session.add(user)
             db.session.commit()
             return user

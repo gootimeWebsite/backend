@@ -31,7 +31,7 @@ except ImportError:
 def shell_command():
     ctx = dict(
         app=app, db=db, User=User, Messages=Messages, Article=Article, Forum=Forum,
-        run=run
+        run=run, test=test
     )
     banner = 'Python %s on %s\n%s' % (
         sys.version,
@@ -98,6 +98,15 @@ def init_user():
     user = User(username="Tel72250567", phonenumber="17799163760", forum_roleID=1, article_roleID=1)
     db.session.add(user)
     db.session.commit()
+
+
+@cli.command()
+@click.option('-c', '--coverage', default='False', type=bool, help='If use coverage tool and make report?')
+def test(coverage):
+    os.system("coverage run test.py")
+    if coverage:
+        os.system("coverage report")
+        os.system("coverage html")
 
 
 if __name__ == '__main__':

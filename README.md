@@ -36,6 +36,12 @@ API：见apidoc文档
 初始化数据库，创建数据表：  
 `python run.py initdb`  
 
+单元测试：  
+`python run.py test`  
+
+分析代码覆盖率:  
+`python run.py test -c True`  
+
 Python3.6本地运行：  
 `python run.py` (debug模式) 或：  
 `python run.py runserver -d <debug> -h <host> -p <port>`  

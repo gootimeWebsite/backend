@@ -14,7 +14,7 @@ class ArticleInfo(Resource):
     lzm完成
     '''
 
-    
+
 
     """
     @api {get} /forum/:id Get Article Post
@@ -73,7 +73,7 @@ class ArticleInfo(Resource):
         response.headers['Content-Type'] = 'application/json;charset=utf8'
         response.status_code = status
         return response
-        
+
     """
     @api {put} /forum/:id Update Article Post
     @apiVersion 0.1.0
@@ -124,10 +124,10 @@ class ArticleInfo(Resource):
                 ret_article['content'] = data['content']
                 ret_article['category'] = data['category']
                 ret_article['id'] = post.id
-                post.updatetime = datetime.now()+timedelta(hours=8)       
+                post.updatetime = datetime.now()+timedelta(hours=8)
                 ret_article['updatetime'] = post.updatetime
                 db.session.commit()
-                status = 200 
+                status = 200
                 ret['data'] = ret_article
                 ret['message'] = "success"
             except:
@@ -140,7 +140,7 @@ class ArticleInfo(Resource):
         response.status_code = status
         return response
 
-"""
+    """
     @api {patch} /forum/:id Update Article Post
     @apiVersion 0.1.0
     @apiName PatchArticleID
@@ -196,9 +196,9 @@ class ArticleInfo(Resource):
                 ret_article['category'] = post.category
                 ret_article['updatetime'] = post.updatetime
                 ret_article['id'] = post.id
-                post.updatetime = datetime.now()+timedelta(hours=8)                
+                post.updatetime = datetime.now()+timedelta(hours=8)
                 db.session.commit()
-                status = 200 
+                status = 200
                 ret['data'] = ret_article
                 ret['message'] = "success"
             except:
@@ -211,7 +211,7 @@ class ArticleInfo(Resource):
         response.status_code = status
         return response
 
-"""
+    """
     @api {delete} /forum/:id Delete Article Post
     @apiVersion 0.1.0
     @apiName DeleteArticleID
@@ -254,8 +254,8 @@ class ArticleInfo(Resource):
         response.headers['Content-Type'] = 'application/json;charset=utf8'
         response.status_code = status
         return response
-    
-    
+
+
 @api.resource('/')
 class Article1(Resource):
     decorators = [auth.login_required]
@@ -366,7 +366,7 @@ class Article1(Resource):
             auther = data['auther']
             category = data['category']
             content = str(data['content'])
-            
+
             article = Article(title=title,auther=auther,category=category,content=content)
 
             db.session.add(article)

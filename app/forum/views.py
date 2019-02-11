@@ -224,9 +224,7 @@ class ForumPost(Resource):
             status = 404
         else:
             if post.auther != g.user.username:
-                ret['error'] = "InvalidRequest"
-                ret['message'] = "invalid request"
-                status = 400
+                return "Unauthorized Access", 401
             else:
                 try:
                     ret['message'] = post.update(title=data['title'], content=data['content'])
@@ -278,9 +276,7 @@ class ForumPost(Resource):
             status = 404
         else:
             if post.auther != g.user.username:
-                ret['error'] = "InvalidRequest"
-                ret['message'] = "invalid request"
-                status = 400
+                return "Unauthorized Access", 401
             else:
                 try:
                     if data['type'] == "title":
@@ -314,7 +310,7 @@ class ForumPost(Resource):
 
     """
     @api {delete} /forum/:id Delete Forum Post
-    @apiVersion 0.1.0
+    @apiVersion 0.1.1
     @apiName DeleteForumID
     @apiGroup Forum
     @apiPermission User
@@ -331,7 +327,6 @@ class ForumPost(Resource):
 
     @apiUse UnauthorizedError
     @apiUse PostNotFoundError
-    @apiUse InvalidRequestError
     @apiUse UnknownError
     """
     @permission_required(Permission.POST)
@@ -344,9 +339,7 @@ class ForumPost(Resource):
             status = 404
         else:
             if post.auther != g.user.username and not g.user.forum_is_administrator():
-                ret['error'] = "InvalidRequest"
-                ret['message'] = "invalid request"
-                status = 400
+                return "Unauthorized Access", 401
             else:
                 try:
                     db.session.delete(post)

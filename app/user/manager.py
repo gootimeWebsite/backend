@@ -67,21 +67,6 @@ class UserManager:
             return None
 
 
-    def verify(self, username):
-        """
-        0 : 验证成功
-        1 : 用户不存在
-        2 : 未知错误
-        """
-        try:
-            user = User.query.filter_by(username=username).first()
-            if user is None:
-                return 1
-            return 0
-        except:
-            return 2
-
-
     def delete(self, user):
         try:
             db.session.delete(user)

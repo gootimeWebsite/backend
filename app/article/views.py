@@ -3,9 +3,10 @@ from flask import *
 from flask_restful import Resource
 from . import article, api
 from app import auth
-from .models import Article, db
+from .models import Article, Permission, db
+from .utils import *
 from sqlalchemy.orm import sessionmaker
-from datetime import datetime, timedelta
+from datetime import datetime
 @api.resource('/<int:id>')
 class ArticleInfo(Resource):
     decorators = [auth.login_required]
@@ -105,6 +106,7 @@ class ArticleInfo(Resource):
     @apiUse PostNotFoundError
     @apiUse InvalidRequestError
     """
+    @permission_required(Permission.POST)
     def put(self,id):
         ret = {}
         data = json.loads(request.get_data())
@@ -114,26 +116,28 @@ class ArticleInfo(Resource):
             ret['message'] = "post not found"
             status = 404
         else:
-            try:
-                post.title = data['title']
-                post.auther = data['auther']
-                post.category = data['category']
-                post.content = data['content']
-                ret_article['auther'] = data['auther']
-                ret_article['title'] = data['title']
-                ret_article['content'] = data['content']
-                ret_article['category'] = data['category']
-                ret_article['id'] = post.id
-                post.updatetime = datetime.now()+timedelta(hours=8)
-                ret_article['updatetime'] = post.updatetime
-                db.session.commit()
-                status = 200
-                ret['data'] = ret_article
-                ret['message'] = "success"
-            except:
-                ret['message'] = "invalid request"
-                ret['error'] = "InvalidRequest"
-                status = 400
+            if post.auther != g.user.username:
+                return "Unauthorized Access", 401
+            else:
+                try:
+                    post.title = data['title']
+                    post.category = data['category']
+                    post.content = data['content']
+                    ret_article['auther'] = post.auther
+                    ret_article['title'] = data['title']
+                    ret_article['content'] = data['content']
+                    ret_article['category'] = data['category']
+                    ret_article['id'] = post.id
+                    post.updatetime = datetime.now()
+                    ret_article['updatetime'] = post.updatetime
+                    db.session.commit()
+                    status = 200
+                    ret['data'] = ret_article
+                    ret['message'] = "success"
+                except:
+                    ret['error'] = "InvalidRequest"
+                    ret['message'] = "invalid request"
+                    status = 400
 
         response = make_response(json.dumps(ret))
         response.headers['Content-Type'] = 'application/json;charset=utf8'
@@ -171,6 +175,7 @@ class ArticleInfo(Resource):
     @apiUse PostNotFoundError
     @apiUse InvalidRequestError
     """
+    @permission_required(Permission.POST)
     def patch(self,id):
         ret = {}
         data = json.loads(request.get_data())
@@ -180,31 +185,40 @@ class ArticleInfo(Resource):
             ret['message'] = "post not found"
             status = 404
         else:
-            try:
-                if data.__contains__('title'):
-                    post.title = data['title']
-                if data.__contains__('auther'):
-                    post.auther = data['auther']
-                if data.__contains__('category'):
-                    post.category = data['category']
-                if data.__contains__('content'):
-                    post.content = data['content']
-                post.updatetime = datetime.now()+timedelta(hours=8)
-                ret_article['auther'] = post.auther
-                ret_article['title'] = post.title
-                ret_article['content'] = post.content
-                ret_article['category'] = post.category
-                ret_article['updatetime'] = post.updatetime
-                ret_article['id'] = post.id
-                post.updatetime = datetime.now()+timedelta(hours=8)
-                db.session.commit()
-                status = 200
-                ret['data'] = ret_article
-                ret['message'] = "success"
-            except:
-                ret['message'] = "invalid request"
-                ret['error'] = "InvalidRequest"
-                status = 400
+            if post.auther != g.user.username:
+                return "Unauthorized Access", 401
+            else:
+                try:
+                    status = 202
+                    if data.__contains__('title'):
+                        post.title = data['title']
+                        status = 200
+                    if data.__contains__('category'):
+                        post.category = data['category']
+                        status = 200
+                    if data.__contains__('content'):
+                        post.content = data['content']
+                        status = 200
+                    post.updatetime = datetime.now()
+                    ret_article['auther'] = post.auther
+                    ret_article['title'] = post.title
+                    ret_article['content'] = post.content
+                    ret_article['category'] = post.category
+                    ret_article['updatetime'] = post.updatetime
+                    ret_article['id'] = post.id
+                    post.updatetime = datetime.now()
+                    db.session.commit()
+                    if status == 200:
+                        ret['data'] = ret_article
+                        ret['message'] = "success"
+                    else:
+                        status = 400
+                        ret['error'] = "InvalidRequest"
+                        ret['message'] = "invalid request"
+                except:
+                    ret['error'] = "InvalidRequest"
+                    ret['message'] = "invalid request"
+                    status = 400
 
         response = make_response(json.dumps(ret))
         response.headers['Content-Type'] = 'application/json;charset=utf8'
@@ -213,7 +227,7 @@ class ArticleInfo(Resource):
 
     """
     @api {delete} /forum/:id Delete Article Post
-    @apiVersion 0.1.0
+    @apiVersion 0.1.1
     @apiName DeleteArticleID
     @apiGroup Article
     @apiPermission User
@@ -230,8 +244,9 @@ class ArticleInfo(Resource):
 
     @apiUse UnauthorizedError
     @apiUse PostNotFoundError
-    @apiUse InvalidRequestError
+    @apiUse UnknownError
     """
+    @permission_required(Permission.POST)
     def delete(self,id):
         ret = {}
 
@@ -240,15 +255,18 @@ class ArticleInfo(Resource):
             ret['message'] = "post not found"
             status = 404
         else:
-            try:
-                db.session.delete(post)
-                db.session.commit()
-                ret['message'] = "success"
-                status = 200
-            except:
-                ret['message'] = "invalid request"
-                ret['error'] = "InvalidRequest"
-                status = 400
+            if post.auther != g.user.username and not g.user.forum_is_administrator():
+                return "Unauthorized Access", 401
+            else:
+                try:
+                    db.session.delete(post)
+                    db.session.commit()
+                    ret['message'] = "success"
+                    status = 200
+                except:
+                    ret['error'] = "UnknownError"
+                    ret['message'] = "unknown error"
+                    status = 500
 
         response = make_response(json.dumps(ret))
         response.headers['Content-Type'] = 'application/json;charset=utf8'
@@ -308,7 +326,7 @@ class Article1(Resource):
     def get(self):
         ret = {}
         ret_article=[]
-        post = Article.query.all()
+        post = sorted(Article.query.all(), key=lambda post: post.updatetime, reverse=True)
         if post is None or post == []:
             ret['message'] = "post not found"
             status = 404
@@ -326,7 +344,7 @@ class Article1(Resource):
 
     """
     @api {post} /forum Create A New Article Post
-    @apiVersion 0.1.0
+    @apiVersion 0.1.1
     @apiName PostArticle
     @apiGroup Article
     @apiPermission User
@@ -337,8 +355,8 @@ class Article1(Resource):
     @apiParam {String} content The content of the post.
     @apiParam {String} title New title of the post.
     @apiParam {String} content New content of the post.
-    @apiParam {String} auther New auther of the post.
     @apiParam {String} category New category of the post.
+
     @apiSuccess {String} data Post's data.
     @apiSuccess {String} data.auther Post's auther.
     @apiSuccess {String} data.content Post's content.
@@ -357,13 +375,14 @@ class Article1(Resource):
     @apiUse UnauthorizedError
     @apiUse InvalidRequestError
     """
+    @permission_required(Permission.POST)
     def post(self):
         ret = {}
-        ret_article={}
         data = json.loads(request.get_data())
+
         try:
             title = data['title']
-            auther = data['auther']
+            auther = g.user.username
             category = data['category']
             content = str(data['content'])
 
@@ -371,19 +390,13 @@ class Article1(Resource):
 
             db.session.add(article)
             db.session.commit()
-            ret_article['auther'] = auther
-            ret_article['title'] = title
-            ret_article['content'] = content
-            ret_article['category'] = category
-            ret_article['id'] = article.id
-            ret_article['updatetime'] = article.updatetime
+            ret['id'] = article.id
             ret['message'] = "success"
-            ret['data'] = ret_article
             status = 201
         except:
             status = 400
-            ret['message'] = "invalid request"
             ret['error'] = "InvalidRequest"
+            ret['message'] = "invalid request"
 
         response = make_response(json.dumps(ret))
         response.headers['Content-Type'] = 'application/json;charset=utf8'

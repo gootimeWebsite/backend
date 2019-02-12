@@ -1,5 +1,5 @@
 from app import db
-from datetime import datetime, timedelta
+from datetime import datetime
 
 class Article(db.Model):
     __tablename__ = 'article'
@@ -12,7 +12,7 @@ class Article(db.Model):
     auther = db.Column(db.String(25), db.ForeignKey('user.username', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
     category = db.Column(db.String(50), unique=False, nullable=True)
     content = db.Column(db.Text, nullable=False)
-    updatetime = db.Column(db.DateTime, default=datetime.now()+timedelta(hours=8))
+    updatetime = db.Column(db.DateTime, default=datetime.now())
 
     def __repr__(self):
         return '<ID %r>' % self.id

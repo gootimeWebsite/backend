@@ -3,29 +3,17 @@ from flask import *
 from flask_restful import Resource
 from . import forum, api
 from .models import Forum, Permission, db
+from .utils import *
 from app import auth
-from functools import wraps
 
-def permission_required(p):
-    def decorator(f):
-        @wraps(f)
-        def decorated_function(*args, **kwargs):
-            if not g.user.forum_can(p):
-                abort(403)
-            return f(*args, **kwargs)
-        return decorated_function
-    return decorator
-
-def admin_required(f):
-    return permission_required(Permission.ADMINISTER)(f)
 
 @api.resource('/')
 class ForumHomePage(Resource):
     decorators = [auth.login_required]
 
     """
-    @api {get} /forum Get Forum HomePage
-    @apiVersion 0.1.0
+    @api {get} /forum/ Get Forum HomePage
+    @apiVersion 0.1.1
     @apiName GetForum
     @apiGroup Forum
     @apiPermission User
@@ -34,11 +22,11 @@ class ForumHomePage(Resource):
     @apiUse Authorization
 
     @apiSuccess {String} data Post's data list.
-    @apiSuccess {String} data[i].auther Post's auther.
-    @apiSuccess {String} data[i].content Post's content.
-    @apiSuccess {String} data[i].id Post's id.
-    @apiSuccess {String} data[i].title Post's title.
-    @apiSuccess {String} data[i].updatetime Post's updatetime.
+    @apiSuccess {String} data.auther Post's auther.
+    @apiSuccess {String} data.content Post's content.
+    @apiSuccess {String} data.id Post's id.
+    @apiSuccess {String} data.title Post's title.
+    @apiSuccess {String} data.updatetime Post's updatetime.
     @apiSuccess {String} message Post's getting status: 'success'.
     @apiSuccessExample {json} Success-Response:
         HTTP/1.1 200 OK
@@ -88,8 +76,8 @@ class ForumHomePage(Resource):
 
 
     """
-    @api {post} /forum Create A New Forum Post
-    @apiVersion 0.1.0
+    @api {post} /forum/ Create A New Forum Post
+    @apiVersion 0.1.1
     @apiName PostForum
     @apiGroup Forum
     @apiPermission User
@@ -279,24 +267,17 @@ class ForumPost(Resource):
                 return "Unauthorized Access", 401
             else:
                 try:
-                    if data['type'] == "title":
+                    status = 202
+                    if data.__contains__('title'):
                         ret['message'] = post.update(title=data['title'])
-                        if ret['message'] == "success":
-                            status = 200
-                        else:
-                            status = 500
-                            ret['error'] = "UnknownError"
-                    elif data['type'] == "content":
+                        status = 200 if ret['message'] == "success" else 500
+                    if data.__contains__('content'):
                         ret['message'] = post.update(content=data['content'])
-                        if ret['message'] == "success":
-                            status = 200
-                        else:
-                            status = 500
-                            ret['error'] = "UnknownError"
-                    else:
-                        ret['error'] = "UnknownError"
-                        ret['message'] = "unknown error"
-                        status = 500
+                        status = 200 if ret['message'] == "success" else 500
+                    if status == 202:
+                        status = 400
+                        ret['error'] = "InvalidRequest"
+                        ret['message'] = "invalid request"
                 except:
                     ret['error'] = "InvalidRequest"
                     ret['message'] = "invalid request"

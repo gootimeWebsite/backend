@@ -1,4 +1,5 @@
 from app import db
+from . import logger
 from datetime import datetime, timedelta
 import random
 
@@ -27,16 +28,21 @@ class Forum(db.Model):
             ret['updatetime'] = self.updatetime
             return ("success", ret)
         except:
+            logger.error("Forum.dict()", exc_info = True)
             return ("unknown error", ret)
 
     def insert(self, title, auther, content):
-        self.id = random.randint(100000, 999999)
-        self.title = title
-        self.auther = auther
-        self.content = content
-        db.session.add(self)
-        db.session.commit()
-        return self.id
+        try:
+            self.id = random.randint(100000, 999999)
+            self.title = title
+            self.auther = auther
+            self.content = content
+            db.session.add(self)
+            db.session.commit()
+            return self.id
+        except:
+            logger.error("Forum.insert()", exc_info = True)
+            return None
 
     def update(self, title=None, content=None):
         try:
@@ -49,6 +55,7 @@ class Forum(db.Model):
             db.session.commit()
             return "success"
         except:
+            logger.error("Forum.update()", exc_info = True)
             return "unknown error"
 
 

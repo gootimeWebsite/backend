@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 from flask import *
 from flask_restful import Resource
-from . import article, api
+from . import article, api, logger
 from app import auth
 from .models import Article, Permission, db
 from .utils import *
@@ -69,6 +69,7 @@ class ArticleInfo(Resource):
             ret['message'] = "success"
             ret['data'] = ret_article
             status = 200
+        logger.info(str(status)+" "+ret['message']) if status == 200 else logger.warning(str(status)+" "+ret['message'])
 
         response = make_response(json.dumps(ret))
         response.headers['Content-Type'] = 'application/json;charset=utf8'
@@ -138,6 +139,7 @@ class ArticleInfo(Resource):
                     ret['error'] = "InvalidRequest"
                     ret['message'] = "invalid request"
                     status = 400
+        logger.info(str(status)+" "+ret['message']) if status == 200 else logger.warning(str(status)+" "+ret['message'])
 
         response = make_response(json.dumps(ret))
         response.headers['Content-Type'] = 'application/json;charset=utf8'
@@ -219,6 +221,7 @@ class ArticleInfo(Resource):
                     ret['error'] = "InvalidRequest"
                     ret['message'] = "invalid request"
                     status = 400
+        logger.info(str(status)+" "+ret['message']) if status == 200 else logger.warning(str(status)+" "+ret['message'])
 
         response = make_response(json.dumps(ret))
         response.headers['Content-Type'] = 'application/json;charset=utf8'
@@ -267,6 +270,7 @@ class ArticleInfo(Resource):
                     ret['error'] = "UnknownError"
                     ret['message'] = "unknown error"
                     status = 500
+        logger.info(str(status)+" "+ret['message']) if status == 200 else logger.warning(str(status)+" "+ret['message'])
 
         response = make_response(json.dumps(ret))
         response.headers['Content-Type'] = 'application/json;charset=utf8'
@@ -336,6 +340,7 @@ class Article1(Resource):
                 ret_article.append({"id":item.id,"auther":item.auther,"title":item.title,"content":item.content,"category":item.category,"updatetime":item.updatetime})
                 ret['data'] = ret_article
             status = 200
+        logger.info(str(status)+" "+ret['message']) if status == 200 else logger.warning(str(status)+" "+ret['message'])
 
         response = make_response(json.dumps(ret))
         response.headers['Content-Type'] = 'application/json;charset=utf8'
@@ -397,6 +402,7 @@ class Article1(Resource):
             status = 400
             ret['error'] = "InvalidRequest"
             ret['message'] = "invalid request"
+        logger.info(str(status)+" "+ret['message']) if status == 201 else logger.warning(str(status)+" "+ret['message'])
 
         response = make_response(json.dumps(ret))
         response.headers['Content-Type'] = 'application/json;charset=utf8'

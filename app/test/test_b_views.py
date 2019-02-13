@@ -35,22 +35,22 @@ class UserTest(BaseTestCase):
 
 
     def test_b_login(self):
-        self.begin("POST", "/login")
+        self.begin("POST", "/login    ")
         message = Messages.query.filter_by(phonenumber="17799163760").first().message
 
         response = self.app.post('/login', data = json.dumps({}, ensure_ascii = False))
         ret = json.loads(response.data.decode('utf8'))
-        print (ret["error"], ret["message"])
+        print (ret["message"])
         self.assertEquals(ret["message"], "invalid request")
 
         response = self.app.post('/login', data = json.dumps({"type":"phone","phonenumber":"17799163761","message":str(random.randint(100000, 999999))}, ensure_ascii = False))
         ret = json.loads(response.data.decode('utf8'))
-        print (ret["error"], ret["message"])
+        print (ret["message"])
         self.assertEquals(ret["message"], "need message")
 
         response = self.app.post('/login', data = json.dumps({"type":"phone","phonenumber":"17799163760","message":str(random.randint(100000, 999999))}, ensure_ascii = False))
         ret = json.loads(response.data.decode('utf8'))
-        print (ret["error"], ret["message"])
+        print (ret["message"])
         self.assertEquals(ret["message"], "wrong message")
 
         response = self.app.post('/login', data = json.dumps({"type":"phone","phonenumber":"17799163760","message":message}, ensure_ascii = False))
@@ -72,7 +72,7 @@ class UserTest(BaseTestCase):
 
 
     def test_c_token(self):
-        self.begin("GET", "/token")
+        self.begin("GET", "/token    ")
         d = {}
         with open("./app/test/.cache", "rb") as f:
             d = pickle.load(f)
@@ -93,7 +93,7 @@ class UserTest(BaseTestCase):
 
 
     def test_d_logout(self):
-        self.begin("POST", "/logout")
+        self.begin("POST", "/logout    ")
         d = {}
         with open("./app/test/.cache", "rb") as f:
             d = pickle.load(f)
@@ -110,7 +110,7 @@ class UserTest(BaseTestCase):
 
 
     def test_z_default(self):
-        self.begin("Any", "/   ")
+        self.begin("Any", "/        ")
 
         response = self.app.get('/')
         ret = response.data.decode('utf8')

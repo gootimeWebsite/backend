@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 from flask import *
-from app import app, auth
+from . import app, auth, logger
 from .models import *
 from .user.manager import usermanager
 from .textMessage import TextMessage
@@ -9,11 +9,13 @@ import random, json, re
 
 @auth.verify_token
 def verify_token(token):
+    logger.info(request.method+" "+request.path)
     if request.path == "/token":
         user = User.verify_auth_token(token, True)
     else:
         user = User.verify_auth_token(token)
     if not user:
+        logger.warning("Unauthorized Access")
         return False
     g.user = user
     return True
@@ -65,6 +67,7 @@ login_message = ["success", "success", "unknown error", "need message", "wrong m
 login_error = ["", "", "UnknownError", "NeedMessage", "WrongMessage", "InvalidRequest"]
 @app.route('/login', methods = ['POST'])
 def login():
+    logger.info(request.method+" "+request.path)
     ret = {}
     data = json.loads(request.get_data())
 
@@ -104,11 +107,13 @@ def login():
     ret['message'] = login_message[status]
 
     if status == 0 or status == 1:
+        logger.info("200 "+ret['message'])
         ret['username'] = username
         ret['rftoken'] = user.generate_auth_token(app.config['LONG_LIFE_TIME']).decode('ascii')
         ret['token'] = user.generate_auth_token().decode('ascii')
         ret['expires'] = app.config['LIFE_TIME']
     else:
+        logger.warning(str(login_status[status])+" "+ret['message'])
         ret['error'] = login_error[status]
 
     response = make_response(json.dumps(ret))
@@ -147,6 +152,8 @@ def token():
     response = make_response(json.dumps(ret))
     response.headers['Content-Type'] = 'application/json;charset=utf8'
     response.status_code = 200
+
+    logger.info("200 "+ret['message'])
     return response
 
 
@@ -182,6 +189,8 @@ def logout():
     response = make_response(json.dumps(ret))
     response.headers['Content-Type'] = 'application/json;charset=utf8'
     response.status_code = logout_status[status]
+
+    logger.info("200 "+ret['message'])
     return response
 
 
@@ -207,6 +216,7 @@ message_status = [202, 400]
 message_message = ["success", "invalid request"]
 @app.route('/message', methods = ['POST'])
 def message():
+    logger.info(request.method+" "+request.path)
     ret = {}
     data = json.loads(request.get_data())
 
@@ -233,6 +243,7 @@ def message():
     except:
         status = 1
     ret['message'] = message_message[status]
+    logger.info("202 "+ret['message']) if status == 0 else logger.warning("400 "+ret['message'])
 
     response = make_response(json.dumps(ret))
     response.headers['Content-Type'] = 'application/json;charset=utf8'
@@ -243,4 +254,7 @@ def message():
 @app.route('/', defaults={'path': ''})
 @app.route('/')
 def index():
+    logger.info(request.method+" "+request.path)
+
+    logger.info("404 Not Found")
     return "Not Found",404

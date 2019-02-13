@@ -62,6 +62,7 @@ instance/
 apidoc.json
 footer.md
 header.md
+log/
 
 # Scrapy stuff:
 .scrapy

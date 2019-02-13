@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 from flask import *
 from flask_restful import Resource
-from . import forum, api
+from . import forum, api, logger
 from .models import Forum, Permission, db
 from .utils import *
 from app import auth
@@ -51,23 +51,28 @@ class ForumHomePage(Resource):
         }
 
     @apiUse UnauthorizedError
+    @apiUse PostNotFoundError
     @apiUse UnknownError
     """
     def get(self):
         ret = {}
         ret['data'] = []
-        status = 200
 
         posts = sorted(Forum.query.all(), key=lambda post: post.updatetime, reverse=True)
-        for item in posts:
-            (ret['message'], data) = item.dict()
-            if ret['message'] == "success":
-                status = 200
-                ret['data'].append(data)
-            else:
-                status = 500
-                ret['error'] = "UnknownError"
-                break
+        if posts is None or posts == []:
+            status = 404
+            ret['message'] = "post not found"
+        else:
+            for item in posts:
+                (ret['message'], data) = item.dict()
+                if ret['message'] == "success":
+                    status = 200
+                    ret['data'].append(data)
+                else:
+                    status = 500
+                    ret['error'] = "UnknownError"
+                    break
+        logger.info(str(status)+" "+ret['message']) if status == 200 else logger.warning(str(status)+" "+ret['message'])
 
         response = make_response(json.dumps(ret))
         response.headers['Content-Type'] = 'application/json;charset=utf8'
@@ -112,6 +117,7 @@ class ForumHomePage(Resource):
             ret['error'] = "InvalidRequest"
             ret['message'] = "invalid request"
             status = 400
+        logger.info(str(status)+" "+ret['message']) if status == 201 else logger.warning(str(status)+" "+ret['message'])
 
         response = make_response(json.dumps(ret))
         response.headers['Content-Type'] = 'application/json;charset=utf8'
@@ -171,6 +177,7 @@ class ForumPost(Resource):
             else:
                 status = 500
                 ret['error'] = "UnknownError"
+        logger.info(str(status)+" "+ret['message']) if status == 200 else logger.warning(str(status)+" "+ret['message'])
 
         response = make_response(json.dumps(ret))
         response.headers['Content-Type'] = 'application/json;charset=utf8'
@@ -221,6 +228,7 @@ class ForumPost(Resource):
                     ret['error'] = "InvalidRequest"
                     ret['message'] = "invalid request"
                     status = 400
+        logger.info(str(status)+" "+ret['message']) if status == 200 else logger.warning(str(status)+" "+ret['message'])
 
         response = make_response(json.dumps(ret))
         response.headers['Content-Type'] = 'application/json;charset=utf8'
@@ -282,6 +290,7 @@ class ForumPost(Resource):
                     ret['error'] = "InvalidRequest"
                     ret['message'] = "invalid request"
                     status = 400
+        logger.info(str(status)+" "+ret['message']) if status == 200 else logger.warning(str(status)+" "+ret['message'])
 
         response = make_response(json.dumps(ret))
         response.headers['Content-Type'] = 'application/json;charset=utf8'
@@ -331,6 +340,7 @@ class ForumPost(Resource):
                     ret['error'] = "UnknownError"
                     ret['message'] = "unknown error"
                     status = 500
+        logger.info(str(status)+" "+ret['message']) if status == 200 else logger.warning(str(status)+" "+ret['message'])
 
         response = make_response(json.dumps(ret))
         response.headers['Content-Type'] = 'application/json;charset=utf8'

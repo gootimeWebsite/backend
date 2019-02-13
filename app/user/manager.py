@@ -18,6 +18,7 @@ class UserManager:
             ret['qq'] = user.qq
             ret['status'] = "success"
         except:
+            logger.error("User.dict()", exc_info = True)
             ret['status'] = "error"
         return ret
 
@@ -34,6 +35,7 @@ class UserManager:
             db.session.commit()
             return user
         except:
+            logger.error("User.insert()", exc_info = True)
             return None
 
 
@@ -47,6 +49,7 @@ class UserManager:
             db.session.commit()
             return "success"
         except:
+            logger.error("User.update()", exc_info = True)
             return "error"
 
 
@@ -64,6 +67,7 @@ class UserManager:
                 return None
             return user
         except:
+            logger.error("User.search()", exc_info = True)
             return None
 
 
@@ -73,6 +77,7 @@ class UserManager:
             db.session.commit()
             return "success"
         except:
+            logger.error("User.delete()", exc_info = True)
             return "error"
 
 

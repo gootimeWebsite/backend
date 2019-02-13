@@ -10,7 +10,7 @@ import json
 
 class DataTest(BaseTestCase):
     def test_database(self):
-        self.begin("", "Database")
+        self.begin(None, "Database")
 
         db.drop_all()
         db.create_all()

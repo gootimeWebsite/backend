@@ -48,4 +48,3 @@ Python3.6本地运行：
 
 后台终端:  
 `python run.py shell`  
-其中调用run()函数运行服务器 (非debug模式)

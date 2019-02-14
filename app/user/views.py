@@ -14,7 +14,7 @@ class UserInfo(Resource):
 
     """
     @api {get} /user/ Get User Information
-    @apiVersion 0.1.0
+    @apiVersion 0.1.1
     @apiName GetUserInfo
     @apiGroup User
     @apiPermission User
@@ -121,7 +121,7 @@ class UserInfo(Resource):
 
     """
     @api {put} /user/ Update User Information
-    @apiVersion 0.1.0
+    @apiVersion 0.1.1
     @apiName PutUserInfo
     @apiGroup User
     @apiPermission User
@@ -145,7 +145,7 @@ class UserInfo(Resource):
             "token": "eyJhbGciOiJIUzI1NiIsImlhdCI6MTU1MDEyMTAyMSwiZXhwIjoxNTUwMTI4MjIxfQ.eyJ1c2VybmFtZSI6ImFkaWwiLCJsaWZldGltZSI6NzIwMCwicmFuZCI6MTA4N30.ZAUU-ko1VlgV6iTLxCmjwdbtmX1lZn24Kqj4KJf7mAo"
         }
 
-    @apiError DuplicateUsername Duplicate Username.
+    @apiError DuplicateUsername Duplicate username.
     @apiErrorExample {json} Error-Response:
         HTTP/1.1 400 BAD REQUEST
         {
@@ -153,7 +153,7 @@ class UserInfo(Resource):
             "message": "username already exist"
         }
 
-    @apiError DuplicatePhonenumber Duplicate Phonenumber.
+    @apiError DuplicatePhonenumber Duplicate phonenumber.
     @apiErrorExample {json} Error-Response:
         HTTP/1.1 400 BAD REQUEST
         {
@@ -220,7 +220,7 @@ class UserInfo(Resource):
 
     """
     @api {patch} /user/ Update User Information
-    @apiVersion 0.1.0
+    @apiVersion 0.1.1
     @apiName PatchUserInfo
     @apiGroup User
     @apiPermission User
@@ -244,7 +244,7 @@ class UserInfo(Resource):
             "token": "eyJhbGciOiJIUzI1NiIsImlhdCI6MTU1MDEyMTAyMSwiZXhwIjoxNTUwMTI4MjIxfQ.eyJ1c2VybmFtZSI6ImFkaWwiLCJsaWZldGltZSI6NzIwMCwicmFuZCI6MTA4N30.ZAUU-ko1VlgV6iTLxCmjwdbtmX1lZn24Kqj4KJf7mAo"
         }
 
-    @apiError DuplicateUsername Duplicate Username.
+    @apiError DuplicateUsername Duplicate username.
     @apiErrorExample {json} Error-Response:
         HTTP/1.1 400 BAD REQUEST
         {
@@ -252,7 +252,7 @@ class UserInfo(Resource):
             "message": "username already exist"
         }
 
-    @apiError DuplicatePhonenumber Duplicate Phonenumber.
+    @apiError DuplicatePhonenumber Duplicate phonenumber.
     @apiErrorExample {json} Error-Response:
         HTTP/1.1 400 BAD REQUEST
         {

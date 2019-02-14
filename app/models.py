@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 from app import db, app
 from .forum.models import Permission as ForumPermission
 from .article.models import Permission as ArticlePermission
@@ -43,7 +44,7 @@ class User(db.Model):
         except BadSignature:
             return None
         user = User.query.get(data['username'])
-        if not refresh and user.rand != data['rand']:
+        if not refresh and user and user.rand != data['rand']:
             return None
         return user
 

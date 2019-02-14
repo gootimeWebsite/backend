@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 from flask import current_app
 from flask.cli import FlaskGroup, run_command
 from flask_sqlalchemy import SQLAlchemy

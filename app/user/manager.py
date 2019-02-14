@@ -19,7 +19,7 @@ class UserManager:
             ret['status'] = "success"
         except:
             logger.error("User.dict()", exc_info = True)
-            ret['status'] = "error"
+            ret['status'] = "unknown error"
         return ret
 
 
@@ -39,18 +39,22 @@ class UserManager:
             return None
 
 
-    def update(self, user, username, phonenumber, weixin, qq):
+    def update(self, user, username=None, phonenumber=None, weixin=None, qq=None):
         try:
-            user.username = username
-            user.phonenumber = phonenumber
-            user.weixin = weixin
-            user.qq = qq
+            if username:
+                user.username = username
+            if phonenumber:
+                user.phonenumber = phonenumber
+            if weixin:
+                user.weixin = weixin
+            if qq:
+                user.qq = qq
             db.session.add(user)
             db.session.commit()
             return "success"
         except:
             logger.error("User.update()", exc_info = True)
-            return "error"
+            return "unknown error"
 
 
     def search(self, data, type):
@@ -78,7 +82,7 @@ class UserManager:
             return "success"
         except:
             logger.error("User.delete()", exc_info = True)
-            return "error"
+            return "unknown error"
 
 
 usermanager = UserManager()

@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 from flask import *
 from .models import Permission
 from functools import wraps

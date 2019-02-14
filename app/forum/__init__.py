@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 from flask import Blueprint
 from flask_restful import Resource, Api
 import logging

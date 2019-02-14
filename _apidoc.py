@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 """
 @apiDefine Authorization
 @apiVersion 0.1.0

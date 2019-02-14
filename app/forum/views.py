@@ -35,14 +35,14 @@ class ForumHomePage(Resource):
                 {
                     "auther": "Tel72250567",
                     "content": "This is a test!",
-                    "id": "511053",
+                    "id": 511053,
                     "title": "Test",
                     "updatetime": "Sun, 03 Feb 2019 04:26:31 GMT"
                 },
                 {
                     "auther": "Tel72250567",
                     "content": "This is a PATCH test!",
-                    "id": "125421",
+                    "id": 125421,
                     "title": "Test",
                     "updatetime": "Sat, 02 Feb 2019 22:09:08 GMT"
                 }
@@ -97,7 +97,7 @@ class ForumHomePage(Resource):
     @apiSuccessExample {json} Success-Response:
         HTTP/1.1 201 OK
         {
-            "id": "901350",
+            "id": 901350,
             "message": "success"
         }
 
@@ -113,7 +113,8 @@ class ForumHomePage(Resource):
             ret['id'] = Forum().insert(data['title'], g.user.username, data['content'])
             ret['message'] = "success"
             status = 201
-        except:
+        except Exception as e:
+            logger.warning(e, exc_info=True)
             ret['error'] = "InvalidRequest"
             ret['message'] = "invalid request"
             status = 400
@@ -152,7 +153,7 @@ class ForumPost(Resource):
             "data": {
                 "auther": "Tel72250567",
                 "content": "This is a test!",
-                "id": "901350",
+                "id": 901350,
                 "title": "Test",
                 "updatetime": "Sat, 02 Feb 2019 23:20:46 GMT"
             },
@@ -224,7 +225,8 @@ class ForumPost(Resource):
                 try:
                     ret['message'] = post.update(title=data['title'], content=data['content'])
                     status = 200 if ret['message'] == "success" else 500
-                except:
+                except Exception as e:
+                    logger.warning(e, exc_info=True)
                     ret['error'] = "InvalidRequest"
                     ret['message'] = "invalid request"
                     status = 400
@@ -286,7 +288,8 @@ class ForumPost(Resource):
                         status = 400
                         ret['error'] = "InvalidRequest"
                         ret['message'] = "invalid request"
-                except:
+                except Exception as e:
+                    logger.warning(e, exc_info=True)
                     ret['error'] = "InvalidRequest"
                     ret['message'] = "invalid request"
                     status = 400
@@ -336,7 +339,8 @@ class ForumPost(Resource):
                     db.session.commit()
                     ret['message'] = "success"
                     status = 200
-                except:
+                except Exception as e:
+                    logger.warning(e, exc_info=True)
                     ret['error'] = "UnknownError"
                     ret['message'] = "unknown error"
                     status = 500

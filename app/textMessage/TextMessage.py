@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 import sys
 from aliyunsdkdysmsapi.request.v20170525 import SendSmsRequest
 from aliyunsdkdysmsapi.request.v20170525 import QuerySendDetailsRequest
@@ -18,7 +19,7 @@ class TextMessage:
 		REGION = "cn-hangzhou"
 		PRODUCT_NAME = "Dysmsapi"
 		DOMAIN = "dysmsapi.aliyuncs.com"
-		
+
 		self.acs_client = AcsClient(const.AccessKeyID, const.AccessKeySecret, REGION)
 		region_provider.add_endpoint(PRODUCT_NAME, REGION, DOMAIN)
 
@@ -46,13 +47,13 @@ class TextMessage:
 
 		# 短信签名
 		smsRequest.set_SignName(signName)
-		
+
 		# 数据提交方式
 		# smsRequest.set_method(MT.POST)
-		
+
 		# 数据提交格式
 		# smsRequest.set_accept_format(FT.JSON)
-		
+
 		# 短信发送的号码列表，必填。
 		smsRequest.set_PhoneNumbers(phoneNumber)
 
@@ -62,4 +63,3 @@ class TextMessage:
 		# TODO 业务处理
 
 		return smsResponse
-

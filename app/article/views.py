@@ -44,7 +44,7 @@ class ArticleInfo(Resource):
                 "content": "This is a test!",
                 "category": "test"
                 "updatetime": "Sun, 03 Feb 2019 04:26:31 GMT"
-                "id": "511053",
+                "id": 511053,
             },
             "message": "success"
         }
@@ -135,7 +135,8 @@ class ArticleInfo(Resource):
                     status = 200
                     ret['data'] = ret_article
                     ret['message'] = "success"
-                except:
+                except Exception as e:
+                    logger.warning(e, exc_info=True)
                     ret['error'] = "InvalidRequest"
                     ret['message'] = "invalid request"
                     status = 400
@@ -217,7 +218,8 @@ class ArticleInfo(Resource):
                         status = 400
                         ret['error'] = "InvalidRequest"
                         ret['message'] = "invalid request"
-                except:
+                except Exception as e:
+                    logger.warning(e, exc_info=True)
                     ret['error'] = "InvalidRequest"
                     ret['message'] = "invalid request"
                     status = 400
@@ -266,7 +268,8 @@ class ArticleInfo(Resource):
                     db.session.commit()
                     ret['message'] = "success"
                     status = 200
-                except:
+                except Exception as e:
+                    logger.warning(e, exc_info=True)
                     ret['error'] = "UnknownError"
                     ret['message'] = "unknown error"
                     status = 500
@@ -283,8 +286,8 @@ class Article1(Resource):
     decorators = [auth.login_required]
 
     """
-    @api {get} /article Get article homepage
-    @apiVersion 0.1.0
+    @api {get} /article/ Get article homepage
+    @apiVersion 0.1.1
     @apiName GetArticle
     @apiGroup Article
     @apiPermission User
@@ -293,12 +296,12 @@ class Article1(Resource):
     @apiUse Authorization
 
     @apiSuccess {String} data Post's data list.
-    @apiSuccess {String} data[i].auther Post's auther.
-    @apiSuccess {String} data[i].content Post's content.
-    @apiSuccess {String} data[i].id Post's id.
-    @apiSuccess {String} data[i].title Post's title.
-    @apiSuccess {String} data[i].category Post's category.
-    @apiSuccess {String} data[i].updatetime Post's updatetime.
+    @apiSuccess {String} data.auther Post's auther.
+    @apiSuccess {String} data.content Post's content.
+    @apiSuccess {String} data.id Post's id.
+    @apiSuccess {String} data.title Post's title.
+    @apiSuccess {String} data.category Post's category.
+    @apiSuccess {String} data.updatetime Post's updatetime.
     @apiSuccess {String} message Post's getting status: 'success'.
     @apiSuccessExample {json} Success-Response:
         HTTP/1.1 200 OK
@@ -310,7 +313,7 @@ class Article1(Resource):
                     "content": "This is a test!",
                     "category": "test"
                     "updatetime": "Sun, 03 Feb 2019 04:26:31 GMT"
-                    "id": "511053",
+                    "id": 511053,
                 },
                 {
                     "auther": "Tel72250568",
@@ -318,7 +321,7 @@ class Article1(Resource):
                     "content": "This is a test!",
                     "category": "test"
                     "updatetime": "Sun, 03 Feb 2019 04:26:42 GMT"
-                    "id": "511057",
+                    "id": 511057,
                 }
             ],
             "message": "success"
@@ -348,7 +351,7 @@ class Article1(Resource):
         return response
 
     """
-    @api {post} /forum Create A New Article Post
+    @api {post} /forum/ Create A New Article Post
     @apiVersion 0.1.1
     @apiName PostArticle
     @apiGroup Article
@@ -358,22 +361,14 @@ class Article1(Resource):
     @apiUse Authorization
     @apiParam {String} title The title of the post.
     @apiParam {String} content The content of the post.
-    @apiParam {String} title New title of the post.
-    @apiParam {String} content New content of the post.
-    @apiParam {String} category New category of the post.
+    @apiParam {String} category The category of the post.
 
-    @apiSuccess {String} data Post's data.
-    @apiSuccess {String} data.auther Post's auther.
-    @apiSuccess {String} data.content Post's content.
-    @apiSuccess {String} data.id Post's id.
-    @apiSuccess {String} data.title Post's title.
-    @apiSuccess {String} data.category Post's category.
-    @apiSuccess {String} data.updatetime Post's updatetime.
+    @apiSuccess {String} id Post's id.
     @apiSuccess {String} message Post's creation status: 'success'.
     @apiSuccessExample {json} Success-Response:
         HTTP/1.1 201 OK
         {
-            "id": "901350",
+            "id": 901350,
             "message": "success"
         }
 
@@ -398,7 +393,8 @@ class Article1(Resource):
             ret['id'] = article.id
             ret['message'] = "success"
             status = 201
-        except:
+        except Exception as e:
+            logger.warning(e, exc_info=True)
             status = 400
             ret['error'] = "InvalidRequest"
             ret['message'] = "invalid request"

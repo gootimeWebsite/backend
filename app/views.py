@@ -86,7 +86,7 @@ def login():
                     username = "Tel" + str(random.randint(10000000, 99999999))
                     while usermanager.search(username, "username") is not None:
                         username = "Tel" + str(random.randint(10000000, 99999999))
-                    user = usermanager.insert(username, data['phonenumber'], "", "")
+                    user = usermanager.insert(username, data['phonenumber'], None, None)
                     if user is not None:
                         status = 1
                     else:
@@ -102,7 +102,8 @@ def login():
             pass
         else:
             status = 5
-    except:
+    except Exception as e:
+        logger.warning(e, exc_info=True)
         status = 5
     ret['message'] = login_message[status]
 
@@ -240,7 +241,8 @@ def message():
             db.session.add(m)
             db.session.commit()
             status = 0
-    except:
+    except Exception as e:
+        logger.warning(e, exc_info=True)
         status = 1
     ret['message'] = message_message[status]
     logger.info("202 "+ret['message']) if status == 0 else logger.warning("400 "+ret['message'])

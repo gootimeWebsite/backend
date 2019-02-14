@@ -6,4 +6,4 @@ user = Blueprint('user', __name__)
 api = Api(user)
 logger = logging.getLogger("flask.app.user")
 
-from . import views, manager
+from . import views, manager, utils

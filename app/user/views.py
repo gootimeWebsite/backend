@@ -4,6 +4,8 @@ from flask_restful import Resource
 from . import user, api, logger
 from app import app, auth
 from .manager import usermanager
+from .utils import DuplicateException
+
 import re
 
 @api.resource('/')
@@ -170,12 +172,24 @@ class UserInfo(Resource):
         ret['message'] = "accepted"
 
         try:
+            phonenumber = data['phonenumber']
+            if not re.fullmatch('\d{11}', phonenumber):
+                raise Exception("Phonenumber do not match.")
+            user = usermanager.search(phonenumber, "phonenumber")
+            if user and user.phonenumber != g.user.phonenumber:
+                raise DuplicateException("phonenumber")
+            else:
+                ret['message'] = usermanager.update(user=g.user, phonenumber=phonenumber)
+                if ret['message'] == "success":
+                    status = 200
+                else:
+                    status = 500
+                    ret['error'] = "UnknownError"
+
             username = data['username']
             user = usermanager.search(username, "username")
             if user and user.username != g.user.username:
-                ret['error'] = "DuplicateUsername"
-                ret['message'] = "username already exist"
-                status = 400
+                raise DuplicateException("username")
             else:
                 ret['message'] = usermanager.update(user=g.user, username=username)
                 if ret['message'] == "success":
@@ -186,22 +200,11 @@ class UserInfo(Resource):
                 else:
                     status = 500
                     ret['error'] = "UnknownError"
-
-            phonenumber = data['phonenumber']
-            if not re.fullmatch('\d{11}', phonenumber):
-                raise Exception("Phonenumber do not match.")
-            user = usermanager.search(phonenumber, "phonenumber")
-            if user and user.phonenumber != g.user.phonenumber:
-                ret['error'] = "DuplicatePhonenumber"
-                ret['message'] = "phonenumber already exist"
-                status = 400
-            else:
-                ret['message'] = usermanager.update(user=g.user, phonenumber=phonenumber)
-                if ret['message'] == "success":
-                    status = 200
-                else:
-                    status = 500
-                    ret['error'] = "UnknownError"
+        except DuplicateException as e:
+            logger.warning(e, exc_info=True)
+            ret['error'] = "Duplicate" + e.typename.capitalize()
+            ret['message'] = e.typename + " already exist"
+            status = 400
         except Exception as e:
             logger.warning(e, exc_info=True)
             ret['error'] = "InvalidRequest"
@@ -268,13 +271,26 @@ class UserInfo(Resource):
         ret['message'] = "accepted"
 
         try:
+            if data.__contains__('phonenumber'):
+                phonenumber = data['phonenumber']
+                if not re.fullmatch('\d{11}', phonenumber):
+                    raise Exception("Phonenumber do not match.")
+                user = usermanager.search(phonenumber, "phonenumber")
+                if user and user.phonenumber != g.user.phonenumber:
+                    raise DuplicateException("phonenumber")
+                else:
+                    ret['message'] = usermanager.update(user=g.user, phonenumber=phonenumber)
+                    if ret['message'] == "success":
+                        status = 200
+                    else:
+                        status = 500
+                        ret['error'] = "UnknownError"
+
             if data.__contains__('username'):
                 username = data['username']
                 user = usermanager.search(username, "username")
                 if user and user.username != g.user.username:
-                    ret['error'] = "DuplicateUsername"
-                    ret['message'] = "username already exist"
-                    status = 400
+                    raise DuplicateException("username")
                 else:
                     ret['message'] = usermanager.update(user=g.user, username=username)
                     if ret['message'] == "success":
@@ -285,22 +301,13 @@ class UserInfo(Resource):
                     else:
                         status = 500
                         ret['error'] = "UnknownError"
-            if data.__contains__('phonenumber'):
-                phonenumber = data['phonenumber']
-                if not re.fullmatch('\d{11}', phonenumber):
-                    raise Exception("Phonenumber do not match.")
-                user = usermanager.search(phonenumber, "phonenumber")
-                if user and user.phonenumber != g.user.phonenumber:
-                    ret['error'] = "DuplicatePhonenumber"
-                    ret['message'] = "phonenumber already exist"
-                    status = 400
-                else:
-                    ret['message'] = usermanager.update(user=g.user, phonenumber=phonenumber)
-                    if ret['message'] == "success":
-                        status = 200
-                    else:
-                        status = 500
-                        ret['error'] = "UnknownError"
+            if status == 202:
+                raise Exception("Empty data.")
+        except DuplicateException as e:
+            logger.warning(e, exc_info=True)
+            ret['error'] = "Duplicate" + e.typename.capitalize()
+            ret['message'] = e.typename + " already exist"
+            status = 400
         except Exception as e:
             logger.warning(e, exc_info=True)
             ret['error'] = "InvalidRequest"

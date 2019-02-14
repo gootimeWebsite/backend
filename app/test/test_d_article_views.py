@@ -8,7 +8,7 @@ import pickle
 import random, json
 
 
-class ForumTest(BaseTestCase):
+class ArticleTest(BaseTestCase):
 
     def test_a_post(self):
         self.begin("POST", "/article/")

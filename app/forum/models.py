@@ -14,7 +14,7 @@ class Forum(db.Model):
     title = db.Column(db.String(50), nullable=False)
     auther = db.Column(db.String(25), db.ForeignKey('user.username', ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
     content = db.Column(db.Text, nullable=False)
-    updatetime = db.Column(db.DateTime, default=datetime.now())
+    updatetime = db.Column(db.DateTime(timezone="Asia/Shanghai"), default=datetime.now())
 
     def __repr__(self):
         return '<ID %r>' % self.id

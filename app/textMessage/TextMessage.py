@@ -10,7 +10,7 @@ from aliyunsdkcore.http import format_type as FT
 from . import const
 
 VERIFICATION = 1
-SIGNNAME = "激流山庄"
+SIGNNAME = "谷天娱乐"
 
 class TextMessage:
 	def __init__(self):

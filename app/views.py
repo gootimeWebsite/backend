@@ -4,6 +4,8 @@ from . import app, auth, logger
 from .models import *
 from .user.manager import usermanager
 from .textMessage import TextMessage
+from .error import *
+
 import random, json, re
 
 
@@ -69,9 +71,12 @@ login_error = ["", "", "UnknownError", "NeedMessage", "WrongMessage", "InvalidRe
 def login():
     logger.info(request.method+" "+request.path)
     ret = {}
-    data = json.loads(request.get_data())
+    status = 202
+    ret['message'] = "accepted"
 
     try:
+        data = json.loads(request.get_data())
+
         if data['type'] == 'phone':
             m = Messages.query.filter_by(phonenumber=data['phonenumber']).first()
             if m is None:
@@ -142,19 +147,28 @@ def login():
         }
 
     @apiUse UnauthorizedError
+    @apiUse UnknownError
     """
 @app.route('/token', methods = ['GET'])
 @auth.login_required
 def token():
     ret = {}
-    ret['message'] = "success"
-    ret['token'] = g.user.generate_auth_token().decode('ascii')
+    status = 202
+    ret['message'] = "accepted"
 
+    try:
+        ret['token'] = g.user.generate_auth_token().decode('ascii')
+        ret['message'] = "success"
+        status = 200
+    except Exception as e:
+        logger.warning(e, exc_info=True)
+        status = 500
+        ret['message'] = "unknown error"
+
+    logger.info(str(status)+" "+ret['message']) if status < 300 else logger.warning(str(status)+" "+ret['message'])
     response = make_response(json.dumps(ret))
     response.headers['Content-Type'] = 'application/json;charset=utf8'
-    response.status_code = 200
-
-    logger.info("200 "+ret['message'])
+    response.status_code = status
     return response
 
 
@@ -176,22 +190,27 @@ def token():
         }
 
     @apiUse UnauthorizedError
+    @apiUse UnknownError
     """
-logout_status = [200, 400]
-logout_message = ["success", "invalid request"]
 @app.route('/logout', methods = ['POST'])
 @auth.login_required
 def logout():
     ret = {}
+    status = 202
+    ret['message'] = "accepted"
 
-    status = 0
-    ret['message'] = logout_message[status]
+    try:
+        ret['message'] = "success"
+        status = 200
+    except Exception as e:
+        logger.warning(e, exc_info=True)
+        status = 500
+        ret['message'] = "unknown error"
 
+    logger.info(str(status)+" "+ret['message']) if status < 300 else logger.warning(str(status)+" "+ret['message'])
     response = make_response(json.dumps(ret))
     response.headers['Content-Type'] = 'application/json;charset=utf8'
-    response.status_code = logout_status[status]
-
-    logger.info("200 "+ret['message'])
+    response.status_code = status
     return response
 
 
@@ -206,33 +225,45 @@ def logout():
 
     @apiSuccess {String} message Text message sending status: 'success'.
     @apiSuccessExample {json} Success-Response:
-        HTTP/1.1 202 OK
+        HTTP/1.1 200 OK
         {
             "message": "success"
         }
 
+    @apiError DuplicatePhonenumber Duplicate phonenumber.
+    @apiErrorExample {json} Error-Response:
+        HTTP/1.1 409 CONFLICT
+        {
+            "message": "phonenumber already exist"
+        }
+
     @apiUse InvalidRequestError
+    @apiUse UnknownError
     """
-message_status = [202, 400]
-message_message = ["success", "invalid request"]
 @app.route('/message', methods = ['POST'])
 def message():
     logger.info(request.method+" "+request.path)
     ret = {}
-    data = json.loads(request.get_data())
+    status = 202
+    ret['message'] = "accepted"
 
     try:
+        data = json.loads(request.get_data())
+
         phonenumber = data['phonenumber']
         if not re.fullmatch('\d{11}', phonenumber):
-            status = 1
-        else:
-            message = TextMessage.TextMessage()
-            businessID = str(random.randint(100000,999999))
-            lastTextMessage = str(random.randint(100000,999999))
-            dic = {}
-            dic['code'] = lastTextMessage
-            #text = message.sendSMS(businessID, phonenumber, dic) #发送短信验证码接口
+            raise WrongDataException("phonenumber")
 
+        user = usermanager.search(phonenumber, "phonenumber")
+        if user:
+            raise DuplicateException("phonenumber")
+
+        message = TextMessage.TextMessage()
+        businessID = str(random.randint(100000,999999))
+        lastTextMessage = str(random.randint(100000,999999))
+        dic = {}
+        dic['code'] = lastTextMessage
+        if app.testing:
             m = Messages.query.filter_by(phonenumber=phonenumber).first()
             if m is None:
                 m = Messages(phonenumber=phonenumber, message=lastTextMessage)
@@ -240,16 +271,44 @@ def message():
                 m.message = lastTextMessage
             db.session.add(m)
             db.session.commit()
-            status = 0
+        else:
+            text = message.sendSMS(businessID, phonenumber, dic) #发送短信验证码接口
+            textObj = json.loads(str(text, encoding='utf-8'))
+            if textObj["Message"] == "OK":
+                logger.info(textObj)
+
+                m = Messages.query.filter_by(phonenumber=phonenumber).first()
+                if m is None:
+                    m = Messages(phonenumber=phonenumber, message=lastTextMessage)
+                else:
+                    m.message = lastTextMessage
+                db.session.add(m)
+                db.session.commit()
+
+                ret['message'] = "success"
+                status = 200
+            else:
+                logger.error(textObj)
+                ret['message'] = "unknown error"
+                status = 500
+
+    except WrongDataException as e:
+        logger.warning(e, exc_info=True)
+        ret['message'] = "wrong " + e.typename
+        status = 400
+    except DuplicateException as e:
+        logger.warning(e, exc_info=True)
+        ret['message'] = e.typename + " already exist"
+        status = 409
     except Exception as e:
         logger.warning(e, exc_info=True)
-        status = 1
-    ret['message'] = message_message[status]
-    logger.info("202 "+ret['message']) if status == 0 else logger.warning("400 "+ret['message'])
+        ret['message'] = "invalid request"
+        status = 400
 
+    logger.info(str(status)+" "+ret['message']) if status < 300 else logger.warning(str(status)+" "+ret['message'])
     response = make_response(json.dumps(ret))
     response.headers['Content-Type'] = 'application/json;charset=utf8'
-    response.status_code = message_status[status]
+    response.status_code = status
     return response
 
 

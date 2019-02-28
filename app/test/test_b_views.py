@@ -21,17 +21,17 @@ class GeneralTest(BaseTestCase):
         response = self.app.post('/message', data = json.dumps({"phonenumber":"177"}, ensure_ascii = False))
         ret = json.loads(response.data.decode('utf8'))
         print (ret["message"])
-        self.assertEquals(ret["message"], "invalid request")
+        self.assertEquals(ret["message"], "wrong phonenumber")
 
         response = self.app.post('/message', data = json.dumps({"phonenumber":"17799163760"}, ensure_ascii = False))
         ret = json.loads(response.data.decode('utf8'))
         print (ret["message"])
-        self.assertEquals(ret["message"], "success")
+        self.assertEquals(ret["message"], "accepted")
 
         response = self.app.post('/message', data = json.dumps({"phonenumber":"17799163760"}, ensure_ascii = False))
         ret = json.loads(response.data.decode('utf8'))
         print (ret["message"])
-        self.assertEquals(ret["message"], "success")
+        self.assertEquals(ret["message"], "accepted")
 
 
     def test_b_login(self):
@@ -54,14 +54,6 @@ class GeneralTest(BaseTestCase):
         self.assertEquals(ret["message"], "wrong message")
 
         response = self.app.post('/login', data = json.dumps({"type":"phone","phonenumber":"17799163760","message":message}, ensure_ascii = False))
-        ret = json.loads(response.data.decode('utf8'))
-        print (ret["message"], ret["username"])
-        self.assertEquals(ret["message"], "success")
-
-        message = Messages(phonenumber="11111111111", message="111111")
-        db.session.add(message)
-        db.session.commit()
-        response = self.app.post('/login', data = json.dumps({"type":"phone","phonenumber":"11111111111","message":"111111"}, ensure_ascii = False))
         ret = json.loads(response.data.decode('utf8'))
         print (ret["message"], ret["username"])
         self.assertEquals(ret["message"], "success")

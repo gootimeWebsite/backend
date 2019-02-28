@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-AccessKeyID = "LTAIyUsusEXX6BzI"
-AccessKeySecret = "IlpOtPcaHvZcVGKhpIFgDeCYWN60Si"
+AccessKeyID = "LTAIAZX5Fg57MLES"
+AccessKeySecret = "MZTcSmlWCD69wMbhqitadvU8w6anJW"
 
-Verification = "SMS_146809628" #发送验证码的短信模板编号
+Verification = "SMS_158940691" #发送验证码的短信模板编号

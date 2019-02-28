@@ -26,3 +26,8 @@ Enjoy!"""
 SHELL_EXITMSG = """Thank you for using!
 Have a good day!
 ==================================================="""
+
+MAIL_SERVER = "smtp.exmail.qq.com"
+MAIL_PORT = 25
+MAIL_USERNAME = "lixinlong@gootian.com"
+MAIL_PASSWORD = "FLXGKMwrfPwqGEzD"

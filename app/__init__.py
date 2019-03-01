@@ -22,7 +22,7 @@ logger.setLevel(logging.DEBUG)
 #logger.handlers = []
 
 fileHandler = TimedRotatingFileHandler(filename="./log/server.log", when='d', interval=1, backupCount=7)
-fileHandler.suffix = "%Y-%m-%d.log"
+fileHandler.suffix = "%Y-%m-%d-%H-%M.log"
 fileHandler.setLevel(level=logging.DEBUG)
 fileHandler.setFormatter(logFormatter)
 logger.addHandler(fileHandler)

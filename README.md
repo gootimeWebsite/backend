@@ -43,8 +43,8 @@ API：见apidoc文档
 `python run.py test -c True`  
 
 Python3.6本地运行：  
-`python run.py` (debug模式) 或：  
-`python run.py runserver -d <debug> -h <host> -p <port>`  
+`python run.py` 或：  
+`python run.py debug` (debug模式)  
 
 后台终端:  
 `python run.py shell`  
